@@ -1,0 +1,432 @@
+---
+title: "Diapositivas de inferencia causal"
+output: html_notebook
+---
+
+```{r}
+# Cargar la librería necesaria para distribuciones normales multivariadas
+library(mvtnorm)
+
+# Fijar la semilla aleatoria para asegurar la reproducibilidad de los resultados
+set.seed(1234)
+
+# 1. Parámetros generales
+# Tamaño de la muestra
+n <- 40
+# Efecto causal verdadero del tratamiento sobre el resultado
+tau <- 1
+
+# 2. Simulación de covariables (X)
+# Se simulan dos covariables (X1 y X2) a partir de una distribución normal multivariada
+X <- rmvnorm(n, 
+             mean = c(1, 2), # Medias de X1 y X2 respectivamente
+             sigma = matrix(c(0.750, -0.375, 
+                             -0.375,  1.000), 
+                            nrow = 2)) # Matriz de varianzas y covarianzas
+
+# 3. Simulación de la asignación del tratamiento (A)
+# Coeficientes que determinan cómo las covariables afectan la probabilidad de recibir tratamiento
+coef_A <- c(0.3, -0.5)
+
+# Se calcula un puntaje combinando las covariables y se añade ruido logístico
+A_score <- X %*% coef_A + rlogis(n)
+
+# Se asigna el tratamiento (1) si el puntaje es mayor a 0, de lo contrario es control (0)
+A <- ifelse(A_score < 0, 0, 1)
+
+# 4. Simulación de la variable de resultado (Y)
+# Coeficientes de cómo las covariables afectan el resultado
+coef_Y <- c(1.4, 5)
+
+# Se calcula Y como una combinación lineal del intercepto, el efecto del tratamiento (tau*A), 
+# el efecto de las covariables (X*coef_Y) y un término de error aleatorio normal
+Y <- 0.75 + tau * A + X %*% coef_Y + 0.75 * rnorm(n)
+
+# 5. Creación del conjunto de datos final
+dataset <- data.frame(A, X, Y)
+# Renombrar las columnas de las covariables para mayor claridad
+names(dataset)[2:3] <- c("X1", "X2")
+```
+
+```{r}
+dataset
+```
+```{r}
+# Complete data fit:
+fit_comp <- lm(Y ~ ., data=dataset)
+summary(fit_comp)
+```
+
+```{r}
+# Partial data fit (X1 removed)
+fit_part <- lm(Y ~ A + X2, data=dataset)
+summary(fit_part)
+```
+
+```{r}
+# Partial data fit (X2 removed)
+fit_part <- lm(Y ~ A + X1, data=dataset)
+summary(fit_part)
+```
+
+```{r}
+# Cargar librerías necesarias
+library(mvtnorm)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+# Fijar semilla para asegurar la reproducibilidad
+set.seed(1234)
+
+# 1. Parámetros de la simulación
+G <- 3000 # Número de simulaciones (como en la presentación)
+sample_sizes <- c(50, 100, 500, 1000, 5000) # Eje X de la gráfica
+tau_true <- 1 # El efecto causal real que queremos estimar
+
+# Coeficientes fijos (tomados de tu primer código)
+mu_X <- c(1, 2)
+sigma_X <- matrix(c(0.750, -0.375, 
+                   -0.375,  1.000), nrow = 2)
+coef_A <- c(0.3, -0.5)
+coef_Y <- c(1.4, 5.0)
+
+# Dataframe vacío para ir guardando todo
+results_endo <- data.frame()
+
+# 2. Bucle principal de simulación
+for (n in sample_sizes) {
+  
+  # Vectores para guardar los resultados de las 3000 iteraciones para el tamaño 'n'
+  tau_complete <- numeric(G)
+  tau_partial <- numeric(G)
+  
+  for (i in 1:G) {
+    # --- PROCESO GENERADOR DE DATOS (Tu código original) ---
+    X <- rmvnorm(n, mean = mu_X, sigma = sigma_X)
+    
+    A_score <- X %*% coef_A + rlogis(n)
+    A <- ifelse(A_score < 0, 0, 1)
+    
+    Y <- 0.75 + tau_true * A + X %*% coef_Y + 0.75 * rnorm(n)
+    
+    # Crear un dataset temporal con nombres de columnas claros
+    df <- data.frame(Y = Y, A = A, X1 = X[,1], X2 = X[,2])
+    # -------------------------------------------------------
+    
+    # --- ESTIMACIÓN DE LOS MODELOS ---
+    
+    # Modelo Completo: Controla por todos los confusores (X1 y X2)
+    fit_comp <- lm(Y ~ A + X1 + X2, data = df)
+    tau_complete[i] <- coef(fit_comp)["A"]
+    
+    # Modelo Parcial: El analista sufre de endogeneidad por omitir X2
+    fit_part <- lm(Y ~ A + X2, data = df)
+    tau_partial[i] <- coef(fit_part)["A"]
+  }
+  
+  # Guardar los resultados en el dataframe general
+  temp_df <- data.frame(
+    Sample_Size = as.factor(n), # Guardar como factor para el eje X discreto
+    Complete = tau_complete,
+    Partial = tau_partial
+  )
+  results_endo <- rbind(results_endo, temp_df)
+}
+
+# 3. Preparación de datos para ggplot
+results_long_endo <- results_endo %>%
+  pivot_longer(cols = c("Complete", "Partial"),
+               names_to = "Model",
+               values_to = "Estimated_Tau") %>%
+  # Ordenar los paneles para que "Complete" quede arriba como en la diapositiva
+  mutate(Model = factor(Model, levels = c("Complete", "Partial")))
+
+# 4. Creación de la gráfica
+ggplot(results_long_endo, aes(x = Sample_Size, y = Estimated_Tau, fill = Model)) +
+  geom_boxplot(outlier.alpha = 0.1, alpha = 0.7) +
+  # La línea roja del valor real tau = 1
+  geom_hline(yintercept = tau_true, color = "red", linetype = "dashed", linewidth = 0.8) +
+  facet_wrap(~ Model, ncol = 1) +
+  labs(title = "Linear Models in Causal Inference: Endogeneity",
+       x = "Sample Size (n)",
+       y = "Estimated Causal Effect") +
+  theme_bw() +
+  scale_fill_manual(values = c("Complete" = "mediumpurple", "Partial" = "mediumpurple")) +
+  theme(legend.position = "none",
+        strip.background = element_rect(fill = "lightgray"),
+        strip.text = element_text(face = "bold", size = 11))
+```
+
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+# Fijar semilla para reproducibilidad
+set.seed(1234)
+
+# 1. Parámetros de la simulación
+G <- 3000 # Número de simulaciones como indica la presentación
+sample_sizes <- c(50, 100, 500, 1000, 5000) # Tamaños de muestra del eje X
+results <- data.frame()
+
+# Bucle principal sobre los tamaños de muestra
+for (n in sample_sizes) {
+  
+  # Vectores para almacenar las estimaciones de tau en cada iteración
+  tau_correct <- numeric(G)
+  tau_misspecified <- numeric(G)
+  
+  for (i in 1:G) {
+    # a. Simulación de la covariable X (asumimos normal estándar)
+    X <- rnorm(n, mean = 0, sd = 1)
+    
+    # b. Asignación del tratamiento A (basado en probabilidad logística)
+    eta <- -0.5 + 2 * X
+    prob_A <- exp(eta) / (1 + exp(eta))
+    A <- rbinom(n, size = 1, prob = prob_A)
+    
+    # c. Variable de resultado Y (Ecuación estructural de la diapositiva)
+    # El efecto causal verdadero de A es 1
+    epsilon <- rnorm(n, mean = 0, sd = 1)
+    Y <- 0.75 + 1 * A + 4 * abs(X) + 0.5 * epsilon
+    
+    # d. Ajuste de Modelos y extracción del efecto (coeficiente de A)
+    
+    # Modelo Correcto (incluye la no linealidad: el valor absoluto de X)
+    fit_correct <- lm(Y ~ A + abs(X))
+    tau_correct[i] <- coef(fit_correct)["A"]
+    
+    # Modelo Mal Especificado (asume relación lineal directa con X)
+    fit_misspec <- lm(Y ~ A + X)
+    tau_misspecified[i] <- coef(fit_misspec)["A"]
+  }
+  
+  # Guardar los resultados de este tamaño de muestra
+  temp_df <- data.frame(
+    Sample_Size = as.factor(n),
+    Correct_Model = tau_correct,
+    Misspecified_Model = tau_misspecified
+  )
+  results <- rbind(results, temp_df)
+}
+
+# 2. Transformación de datos para ggplot (de formato ancho a largo)
+results_long <- results %>%
+  pivot_longer(cols = c("Correct_Model", "Misspecified_Model"),
+               names_to = "Model",
+               values_to = "Estimated_Tau") %>%
+  # Limpiar nombres para que coincidan con la gráfica de la presentación
+  mutate(Model = ifelse(Model == "Correct_Model", "Correct Model", "Misspecified"))
+
+# 3. Creación de la gráfica (Boxplots facetados)
+ggplot(results_long, aes(x = Sample_Size, y = Estimated_Tau, fill = Model)) +
+  geom_boxplot(outlier.alpha = 0.1, alpha = 0.7) +
+  # Línea roja que marca el efecto causal verdadero (tau = 1)
+  geom_hline(yintercept = 1.0, color = "red", linetype = "dashed", linewidth = 0.8) +
+  # Dividir en dos paneles como en la diapositiva
+  facet_wrap(~ Model, ncol = 1) +
+  labs(title = "Boxplots by Sample Size and Fit (Correct vs. Misspecified Model)",
+       x = "Column Name",
+       y = "Value") +
+  theme_bw() +
+  scale_fill_manual(values = c("Correct Model" = "skyblue", "Misspecified" = "salmon")) +
+  theme(legend.position = "none",
+        strip.background = element_rect(fill = "lightgray"),
+        strip.text = element_text(face = "bold"))
+```
+
+```{r}
+# Cargar la librería necesaria para distribuciones normales multivariadas
+library(mvtnorm)
+
+# Fijar la semilla aleatoria para asegurar la reproducibilidad de los resultados
+set.seed(1234)
+
+# 1. Parámetros generales
+# Tamaño de la muestra
+n <- 40
+# Efecto causal verdadero del tratamiento sobre el resultado
+tau <- 1
+
+# 2. Simulación de covariables (X)
+# Se simulan dos covariables (X1 y X2) a partir de una distribución normal multivariada
+X <- rmvnorm(n, 
+             mean = c(1, 2), # Medias de X1 y X2 respectivamente
+             sigma = matrix(c(0.750, -0.375, 
+                             -0.375,  1.000), 
+                            nrow = 2)) # Matriz de varianzas y covarianzas
+
+# 3. Simulación de la asignación del tratamiento (A)
+# Coeficientes que determinan cómo las covariables afectan la probabilidad de recibir tratamiento
+coef_A <- c(0.3, -0.5)
+
+# Se calcula un puntaje combinando las covariables y se añade ruido logístico
+A_score <- X %*% coef_A + rlogis(n)
+
+# Se asigna el tratamiento (1) si el puntaje es mayor a 0, de lo contrario es control (0)
+A <- ifelse(A_score < 0, 0, 1)
+
+# 4. Simulación de la variable de resultado (Y)
+# Coeficientes de cómo las covariables afectan el resultado
+coef_Y <- c(1.4, 5)
+
+# Se calcula Y como una combinación lineal del intercepto, el efecto del tratamiento (tau*A), 
+# el efecto de las covariables (X*coef_Y) y un término de error aleatorio normal
+Y <- 0.75 + tau * A + X %*% coef_Y + 0.75 * rnorm(n)
+
+# 5. Creación del conjunto de datos final
+dataset <- data.frame(A, X, Y)
+# Renombrar las columnas de las covariables para mayor claridad
+names(dataset)[2:3] <- c("X1", "X2")
+```
+
+```{r}
+# Complete data fit:
+fit_X <- lm(Y ~ ., data=dataset)
+summary(fit_X)
+```
+
+```{r}
+PS_fit <- glm(A ~ X1 + X2, data=dataset, family="binomial")
+PS <- as.numeric(predict(PS_fit, type="response"))
+# Inference using the PS:
+fit_PS <- lm(Y ~ A + PS, data=dataset)
+summary(fit_PS)
+```
+
+```{r}
+# Cargar las librerías necesarias
+library(mvtnorm)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+# Fijar semilla para reproducibilidad
+set.seed(1234)
+
+# 1. Parámetros generales de la simulación
+G <- 3000 # Número de iteraciones
+sample_sizes <- c(50, 100, 500, 1000, 5000) # Eje X
+tau_true <- 1 # Efecto causal verdadero
+
+# Coeficientes del modelo generador
+mu_X <- c(1, 2)
+sigma_X <- matrix(c(0.750, -0.375, 
+                   -0.375,  1.000), nrow = 2)
+coef_A <- c(0.3, -0.5)
+coef_Y <- c(1.4, 5.0)
+
+# Dataframe para almacenar resultados
+results_ps <- data.frame()
+
+# 2. Bucle principal de simulación (Monte Carlo)
+for (n in sample_sizes) {
+  
+  # Vectores para esta ronda
+  tau_full <- numeric(G)
+  tau_ps <- numeric(G)
+  
+  for (i in 1:G) {
+    # --- SIMULAR DATOS ---
+    X <- rmvnorm(n, mean = mu_X, sigma = sigma_X)
+    A_score <- X %*% coef_A + rlogis(n)
+    A <- ifelse(A_score < 0, 0, 1)
+    Y <- 0.75 + tau_true * A + X %*% coef_Y + 0.75 * rnorm(n)
+    
+    df <- data.frame(Y = Y, A = A, X1 = X[,1], X2 = X[,2])
+    
+    # --- MODELO 1: Full Data (Todas las covariables) ---
+    fit_full <- lm(Y ~ A + X1 + X2, data = df)
+    tau_full[i] <- coef(fit_full)["A"]
+    
+    # --- MODELO 2: Propensity Score (PS) ---
+    # Paso A: Estimar el PS con regresión logística
+    # (Suprimimos advertencias porque en n=50 a veces hay separación perfecta)
+    suppressWarnings({
+      ps_model <- glm(A ~ X1 + X2, family = "binomial", data = df)
+      df$PS <- predict(ps_model, type = "response")
+    })
+    
+    # Paso B: Inferencia causal controlando solo por el PS
+    fit_ps <- lm(Y ~ A + PS, data = df)
+    tau_ps[i] <- coef(fit_ps)["A"]
+  }
+  
+  # Guardar los datos
+  temp_df <- data.frame(
+    Sample_Size = as.factor(n),
+    Full_Data = tau_full,
+    PS = tau_ps
+  )
+  results_ps <- rbind(results_ps, temp_df)
+}
+
+# 3. Preparación de datos para ggplot
+results_long_ps <- results_ps %>%
+  pivot_longer(cols = c("Full_Data", "PS"),
+               names_to = "Model",
+               values_to = "Estimated_Tau") %>%
+  # Limpiar nombres y ordenar paneles (PS arriba, Full Data abajo)
+  mutate(Model = ifelse(Model == "Full_Data", "Full Data", "PS"),
+         Model = factor(Model, levels = c("PS", "Full Data")))
+
+# 4. Creación de la gráfica
+ggplot(results_long_ps, aes(x = Sample_Size, y = Estimated_Tau, fill = Model)) +
+  geom_boxplot(outlier.alpha = 0.1, alpha = 0.7) +
+  # Línea roja para el efecto causal real
+  geom_hline(yintercept = tau_true, color = "red", linetype = "dashed", linewidth = 0.8) +
+  facet_wrap(~ Model, ncol = 1) +
+  labs(title = "Boxplots by Sample Size and Fit (Full Data vs. Propensity Score)",
+       x = "Column Name", # Mantengo el nombre del eje como en tu captura anterior
+       y = "Value") +
+  theme_bw() +
+  scale_fill_manual(values = c("PS" = "mediumpurple", "Full Data" = "mediumpurple")) +
+  theme(legend.position = "none",
+        strip.background = element_rect(fill = "lightgray"),
+        strip.text = element_text(face = "bold", size = 11))
+```
+
+
+```{r}
+# 1. Instalar el paquete que contiene los datos originales (solo necesitas correr esto una vez)
+# install.packages("ATE") 
+# install.packages("tableone")
+
+library(ATE)
+library(tableone)
+
+# 2. Cargar el dataset directamente desde el paquete ATE
+data("nhanes_bmi", package = "ATE")
+
+# Para que el código sea igual al tuyo, lo renombramos a DATA
+DATA <- nhanes_bmi 
+
+# 3. Definir tus covariables y la variable de tratamiento
+vars <- c("age", "ChildSex", "black", "mexam", "pir200_plus", 
+          "WIC", "Food_Stamp", "fsdchbi", "AnyIns", "RefSex", "RefAge")
+
+group_var <- "School_meal"
+
+# 4. Crear la Tabla 1
+table.obj <- CreateTableOne(vars = vars, strata = group_var, data = DATA)
+
+# 5. Imprimir la tabla pidiendo la Diferencia Estandarizada (SMD)
+print(table.obj, smd = TRUE)
+
+```
+```{r}
+names(DATA)
+```
+
+
+
+
+
+
+
+
+
+
