@@ -390,38 +390,6 @@ ggplot(results_long_ps, aes(x = Sample_Size, y = Estimated_Tau, fill = Model)) +
 ```
 
 
-```{r}
-# 1. Instalar el paquete que contiene los datos originales (solo necesitas correr esto una vez)
-# install.packages("ATE") 
-# install.packages("tableone")
-
-library(ATE)
-library(tableone)
-
-# 2. Cargar el dataset directamente desde el paquete ATE
-data("nhanes_bmi", package = "ATE")
-
-# Para que el código sea igual al tuyo, lo renombramos a DATA
-DATA <- nhanes_bmi 
-
-# 3. Definir tus covariables y la variable de tratamiento
-vars <- c("age", "ChildSex", "black", "mexam", "pir200_plus", 
-          "WIC", "Food_Stamp", "fsdchbi", "AnyIns", "RefSex", "RefAge")
-
-group_var <- "School_meal"
-
-# 4. Crear la Tabla 1
-table.obj <- CreateTableOne(vars = vars, strata = group_var, data = DATA)
-
-# 5. Imprimir la tabla pidiendo la Diferencia Estandarizada (SMD)
-print(table.obj, smd = TRUE)
-
-```
-```{r}
-names(DATA)
-```
-
-
 
 
 
