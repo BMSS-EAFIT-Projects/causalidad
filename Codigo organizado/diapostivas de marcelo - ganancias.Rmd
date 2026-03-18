@@ -1,0 +1,51 @@
+Causalidad NSW
+
+```{r}
+data(lalonde, package = "Matching")
+head(lalonde)
+```
+```{r}
+dim(lalonde)
+```
+
+```{r}
+#install.packages("openxlsx")
+library(openxlsx)
+
+#write.xlsx(lalonde, file = "nsw.xlsx")
+
+```
+
+```{r}
+names(lalonde)
+```
+```{r}
+lalonde$u74 <- as.numeric(lalonde$re74==0)
+lalonde$u75 <- as.numeric(lalonde$re75==0)
+```
+
+
+```{r}
+vars <- c("age","educ","black","hisp","married","nodegr","re74","re75","re78", "u74", "u75")
+group_var <- "treat"
+table.obj <- tableone::CreateTableOne(vars = vars, strata = group_var, data =lalonde)
+print(table.obj)
+```
+
+```{r}
+lalonde_fit <- lm(re78 ~ ., data=lalonde)
+```
+
+```{r}
+lalonde_fit
+```
+
+```{r}
+lalonde_fit <- lm(re78 ~ treat + age + educ + I(educ^2) + I(educ^3) +factor(nodegr) + factor(black) + factor(hisp) + re74 + re75, data=lalonde)
+```
+
+
+```{r}
+lalonde_fit
+```
+

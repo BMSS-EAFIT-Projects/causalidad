@@ -283,6 +283,8 @@ dataset <- data.frame(A, X, Y)
 names(dataset)[2:3] <- c("X1", "X2")
 ```
 
+
+
 ```{r}
 # Complete data fit:
 fit_X <- lm(Y ~ ., data=dataset)
@@ -389,8 +391,41 @@ ggplot(results_long_ps, aes(x = Sample_Size, y = Estimated_Tau, fill = Model)) +
         strip.text = element_text(face = "bold", size = 11))
 ```
 
+```{r}
+# Inference using X:
+fit_X <- lm(Y ~ ., data=dataset)
+summary(fit_X)
+```
+
+```{r}
+PS_fit <- glm(A ~ X1 + X2, data=dataset, family="binomial")
+PS <- as.numeric(predict(PS_fit, type="response"))
+# Inference using the PS:
+fit_PS <- lm(Y ~ A + PS, data=dataset)
+summary(fit_PS)
+```
 
 
+```{r}
+integrate(function(x) x, lower = 0, upper = 1)
+ 
+valor_variable <- c(1, 2, 3, 4)
+probabilidad <- c(0.1, 0.3, 0.4, 0.2)
+valor_esperado <- sum(valores * probabilidades)
+print(valor_esperado)
+```
+
+```{r}
+# 1. Permutación de 3 elementos (3!)
+factorial(3) # Resultado: 6
+
+# 2. Permutaciones de 3 elementos tomados de a 2 (P(3,2))
+library(gtools)
+permutaciones <- permutations(n=3, r=2, v=c("A", "B", "C"))
+print(permutaciones)
+# Resultado: 6 pares ordenados (AB, AC, BA, BC, CA, CB)
+
+```
 
 
 
