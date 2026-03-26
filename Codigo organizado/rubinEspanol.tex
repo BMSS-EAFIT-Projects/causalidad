@@ -1,0 +1,714 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{geometry}
+\usepackage{setspace}
+\usepackage{indentfirst}
+\usepackage{array}
+\usepackage{booktabs}
+
+\geometry{top=2.5cm, bottom=2.5cm, left=3cm, right=3cm}
+\setlength{\parindent}{1.5em}
+\setlength{\parskip}{4pt}
+
+\newtheorem{theorem}{Teorema}
+\newtheorem{definition}{Definición}
+
+% -------------------------------------------------------
+% Encabezado de revista (imitando el original)
+% -------------------------------------------------------
+\newcommand{\journalheader}{%
+  \noindent\textit{The Annals of Statistics}\\
+  1978, Vol.\ 6, No.\ 1, 34--58
+  \vspace{1.5em}
+}
+
+\begin{document}
+
+\journalheader
+
+\begin{center}
+  {\Large\bfseries INFERENCIA BAYESIANA PARA EFECTOS CAUSALES:\\[0.3em]
+  EL ROL DE LA ALEATORIZACIÓN}\\[1em]
+  {\large Por Donald B.\ Rubin}\\[0.4em]
+  \textit{Educational Testing Service, Princeton, Nueva Jersey}
+\end{center}
+
+\vspace{0.8em}
+
+\noindent\textit{Resumen.} Los efectos causales son comparaciones entre valores que
+habrían sido observados bajo todas las asignaciones posibles de tratamientos a unidades
+experimentales. En un experimento, se elige una asignación de tratamientos y solo se
+pueden observar los valores bajo dicha asignación. La inferencia bayesiana para efectos
+causales se obtiene encontrando la distribución predictiva de los valores bajo las demás
+asignaciones de tratamientos. Esta perspectiva aclara el papel de los mecanismos que
+muestrean las unidades experimentales, asignan tratamientos y registran datos. A menos
+que estos mecanismos sean ignorables (funciones probabilísticas conocidas de los valores
+registrados), el bayesiano debe modelarlos en el análisis de datos y, en consecuencia,
+enfrentar inferencias para efectos causales que son más sensibles a la especificación de
+la distribución a priori de los datos. Más aún, no todos los mecanismos ignorables pueden
+producir datos a partir de los cuales las inferencias para efectos causales sean
+insensibles a las especificaciones a priori. Los diseños aleatorizados clásicos se destacan
+como mecanismos de asignación especialmente atractivos, diseñados para hacer que la
+inferencia sobre efectos causales sea directa al limitar la sensibilidad de un análisis
+bayesiano válido.
+
+\vspace{1em}
+
+% -------------------------------------------------------
+\section{Introducción y panorama general}
+% -------------------------------------------------------
+
+La discusión sobre el papel de la aleatorización en la búsqueda de tratamientos eficaces
+es habitual en las ciencias sociales y de la salud. Véanse, por ejemplo, Campbell y
+Erlebacher (1970), Gilbert (1975), Gilbert, Light y Mosteller (1974) y Weinstein (1974).
+Las reglas de aleatorización implican que la asignación de tratamientos se realice mediante
+un mecanismo aleatorio objetivamente definido y no de acuerdo con decisiones ad hoc de los
+experimentadores o los sujetos del experimento. Dado que los sujetos humanos pueden ser
+asignados aleatoriamente a tratamientos que algunos consideran menos eficaces que otros
+tratamientos en estudio, existe un interés creciente en diseños que reduzcan o eliminen la
+aleatorización.
+
+Algunos opositores a la aleatorización recurren a la estadística bayesiana como fundamento
+conceptual de su postura. Sin embargo, el desarrollo cuidadoso del marco bayesiano para
+extraer inferencias sobre los efectos causales de los tratamientos explicita los pasos
+necesarios para analizar estudios aleatorizados y no aleatorizados, y demuestra que los
+estudios aleatorizados son en general sustancialmente más fáciles de analizar que los
+estudios no aleatorizados comparables. Por tanto, argumentamos que la aleatorización
+desempeña un papel central en la inferencia bayesiana para efectos causales.
+
+Intuitivamente, el efecto causal de un tratamiento respecto a otro para una unidad
+experimental particular es la diferencia entre el resultado si la unidad hubiera sido
+expuesta al primer tratamiento y el resultado si, en cambio, hubiera sido expuesta al
+segundo tratamiento (Rubin, 1974). El problema es, por supuesto, que no podemos volver
+atrás en el tiempo para administrar el otro tratamiento, y por tanto debemos comparar un
+resultado observado con uno no observado.
+
+La Sección~2 formaliza esta idea conceptualizando la inferencia para efectos causales como
+inferencia sobre valores que habrían sido observados bajo todas las asignaciones posibles
+de tratamientos. La Sección~3 describe los modelos bayesianos para (1)~la distribución a
+priori de los datos potencialmente observables, (2)~el mecanismo que selecciona unidades
+experimentales para la exposición a tratamientos y asigna tratamientos, y (3)~el mecanismo
+que elige los valores a registrar para el análisis de datos.
+
+La Sección~4 muestra que el estadístico bayesiano generalmente necesita los tres modelos
+para extraer inferencias sobre efectos causales. Los modelos para los mecanismos usados
+para seleccionar unidades experimentales, asignar tratamientos y registrar datos solo
+pueden ser ignorados en casos especiales en que son ``ignorables'', lo que significa que
+especifican reglas basadas en funciones conocidas, posiblemente probabilísticas, de los
+valores registrados, como ocurre con la aleatorización. Por ejemplo, mostramos que si el
+experimentador asigna tratamientos de modo que el diseño le ``prometió decirle lo más''
+(Savage, 1962), el mecanismo de asignación es ignorable únicamente si los valores usados
+para tomar las decisiones de asignación son registrados y modelados en el análisis de
+datos. Si estos valores no se registran, el mecanismo de asignación no es ignorable y debe
+modelarse por sí mismo para dar cuenta de posibles correlaciones entre valores registrados
+y no registrados usados en la asignación. En este caso, las inferencias para efectos
+causales son sensibles a las especificaciones a priori porque los valores registrados no
+pueden estimar directamente las correlaciones entre valores registrados y no registrados.
+Las inferencias para efectos causales también son sensibles a las especificaciones a priori
+cuando mecanismos de asignación ignorables producen datos mal balanceados respecto a las
+covariables registradas.
+
+La Sección~5 analiza el papel de la aleatorización. Los mecanismos ignorables que
+incorporan alguna aleatorización protegen contra datos desbalanceados respecto a las
+covariables registradas. Más importante aún, mostramos que los diseños aleatorizados
+clásicos permiten al bayesiano lograr balance aproximado respecto a muchas variables de
+bloqueo, y extraer inferencias sobre efectos causales sin necesidad de formalizar dichas
+variables de bloqueo, registrar sus valores o modelar su distribución conjunta a priori con
+las variables de resultado. Esta libertad respecto al manejo explícito de muchas variables
+de bloqueo redunda en análisis de efectos causales relativamente directos e insensibles a
+las especificaciones a priori.
+
+% -------------------------------------------------------
+\section{Supuestos y notación}
+% -------------------------------------------------------
+
+Consideremos un estudio de $T$ \textit{tratamientos} y una población $P$ de $N$
+\textit{unidades experimentales} para las cuales deseamos estimar los efectos causales de
+los tratamientos. Por tratamiento entendemos una serie de acciones bien definidas que
+pueden aplicarse a una unidad de estudio. Ejemplos típicos de tratamientos son
+intervenciones médicas o quirúrgicas en pacientes con enfermedad de las arterias coronarias.
+El tratamiento que consiste en ninguna intervención activa es de interés frecuente cuando
+la eficacia de las intervenciones propuestas es incierta. Por unidad experimental
+entendemos una unidad particular de estudio (por ejemplo, una persona) en un momento
+particular, ya que el efecto de un tratamiento sobre una unidad puede depender de cuándo
+se aplica el tratamiento. Solo se necesita considerar un número finito de unidades
+experimentales, ya que ningún tratamiento se aplicará indefinidamente en el futuro.
+
+Las filas de la matriz en la Figura~1 representan las $N$ unidades experimentales en $P$.
+Las entradas de la matriz corresponden a todos los valores que uno podría registrar en un
+estudio de los $T$ tratamientos. La matriz no es una matriz de datos estándar de
+``unidades por variables'' de valores observados, ya que en cualquier estudio solo se
+registran algunos de los valores representados. Esta representación explícita de todos los
+valores potencialmente observables conduce a una notación considerable, pero una vez
+establecida, la notación permite extraer conclusiones importantes de manera casi inmediata.
+
+% --- Figura 1 (esquema simplificado) ---
+\begin{figure}[ht]
+\centering
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|}
+\hline
+\multicolumn{2}{|c|}{\textbf{Valores}} &
+\textbf{Trat.} &
+\multicolumn{3}{c|}{\textbf{Valores postratamiento } $Y$} &
+\multicolumn{3}{c|}{\textbf{Indicador de datos faltantes } $M$} \\
+\multicolumn{2}{|c|}{pretramiento $X$} & $W$ &
+$Y^1$ & $\cdots$ & $Y^T$ &
+$M^X$ & $\cdots$ & $M^T$ \\
+\hline
+$X_1$ & $\cdots$ & & $Y^1_1\;\cdots$ & & $Y^T_1\;\cdots$ &
+$M^X_1\;\cdots$ & & $M^T_1\;\cdots$ \\
+\hline
+\multicolumn{9}{|c|}{Unidades experimentales $1, 2, \ldots, N$ en población $P$} \\
+\hline
+\end{tabular}
+\caption{Todos los valores en un estudio de $T$ tratamientos.}
+\end{figure}
+
+\subsection{Valores pretratamiento --- covariables}
+
+La colección de $c$ columnas etiquetadas $X = (X_1, X_2, \ldots, X_c)$ se refiere a los
+valores de todas las variables que describen las unidades experimentales que podrían
+registrarse \textit{antes} de que se asignen los tratamientos. Cada columna de $X$ se
+refiere a un aspecto particular de las unidades experimentales, como presión arterial
+preoperatoria, orden de entrada al experimento, edad, o la evaluación del médico sobre la
+salud preoperatoria. Cuando se registran y utilizan en el análisis de datos, una columna
+particular de $X$ se denomina a menudo covariable, variable concomitante, variable de
+fondo, factor de bloqueo o indicador de grupo si se usa para definir subpoblaciones de
+$P$. Suponemos que todas las variables pretratamiento que podrían usarse para distinguir
+entre unidades experimentales están incluidas en $X$, independientemente de si sus valores
+son realmente registrados para el análisis de datos.
+
+\subsection{Asignación a condición de tratamiento}
+
+La columna etiquetada $W$ indica cuáles unidades experimentales fueron seleccionadas para
+la exposición a un tratamiento y qué tratamiento recibió cada unidad seleccionada.
+Específicamente, los elementos de $W$ toman uno de los $T+1$ valores
+$0, 1, \ldots, T$: $W_i = 0$ indica que la $i$-ésima unidad experimental no fue
+seleccionada y por tanto no fue expuesta a ninguno de los $T$ tratamientos en estudio;
+$W_i = t\,(>0)$ indica que la unidad experimental fue seleccionada y recibió el
+tratamiento $t$.
+
+En experimentos controlados, $W$ refleja dos mecanismos: el mecanismo de muestreo que
+determina las unidades experimentales a estudiar (es decir, a exponer a un tratamiento) y
+el mecanismo de asignación de tratamientos que determina qué tratamiento recibe cada
+unidad muestreada. En estudios observacionales, $W$ refleja el mecanismo, más allá del
+control del experimentador, que determina qué unidades experimentales son expuestas a cada
+tratamiento; en tales estudios, el mecanismo de muestreo que selecciona qué unidades
+experimentales tratadas serán estudiadas queda reflejado por la variable indicadora
+discutida en la Sección~2.4.
+
+\subsection{Valores postratamiento --- variables dependientes}
+
+Las $T$ colecciones de columnas etiquetadas $Y = (Y^1, Y^2, \ldots, Y^T)$ se refieren a
+los valores de todas las variables que describen las unidades experimentales que podrían
+registrarse \textit{después} de la asignación de tratamientos. Específicamente, la
+colección de $d$ columnas etiquetadas $Y^1 = (Y^1_1, \ldots, Y^1_d)$ se refiere a los
+valores observables de $Y$ si todas las unidades experimentales fueran expuestas al
+tratamiento~1 (es decir, si $W = (1,\ldots,1)'$), $Y^2 = (Y^2_1, \ldots, Y^2_d)$ se
+refiere a los valores observables de $Y$ si todas las unidades experimentales fueran
+expuestas al tratamiento~2, y así sucesivamente. Si una unidad experimental no fue
+seleccionada para la exposición a uno de los tratamientos, suponemos que no se observarán
+valores de $Y$ para dicha unidad. (Por tanto, no se necesita un $Y^0$.) Cada colección
+$Y^t$ incluye los mismos $d$ aspectos de las unidades experimentales; una columna
+particular en $Y^t$ se refiere, por ejemplo, a la presión arterial postoperatoria o a la
+evaluación del médico sobre la salud postoperatoria. Las dos columnas $Y^1_k$ e $Y^2_k$
+se refieren al mismo aspecto de las unidades experimentales pero bajo exposición a
+tratamientos distintos. En un análisis de datos, una $Y_k = (Y^1_k, Y^2_k, \ldots,
+Y^T_k)$ particular se denomina habitualmente variable de resultado, variable dependiente,
+variable de respuesta o variable criterio. Existen $T$ columnas que representan cada
+variable de respuesta porque el valor observable del aspecto representado por $Y_k$
+diferirá en general bajo diferentes tratamientos.
+
+Para que esta representación usando $T$ columnas para cada $Y_k$ sea adecuada, debemos
+suponer que si la $i$-ésima unidad experimental es seleccionada para el tratamiento
+$t\,(>0)$ y se le asigna el tratamiento $t$, el valor observable de $Y$ es el mismo
+para todas las asignaciones de tratamientos a las demás unidades experimentales. Es decir,
+para cada $k$, $Y^t_{ki}$ representa el valor observable de la $i$-ésima unidad
+experimental para $Y_k$ bajo todos los valores de $W$ tales que $W_i = t\,(>0)$. Sin
+este supuesto, necesitaríamos más de $T$ versiones de cada $Y_k$, ya que requeriríamos
+una versión diferente para cada valor de $W$ que conduzca a un valor potencialmente
+distinto de $Y_k$. Este supuesto, denominado ``sin interferencia entre diferentes
+unidades'' por Cox (1958, p.~19), se adopta habitualmente en la práctica. Una excepción
+común son los diseños cruzados con efectos de arrastre aditivos asumidos. Nuestro modelo
+puede extenderse para incluir supuestos más generales sobre efectos de interferencia entre
+unidades, pero por simplicidad notacional y descriptiva suponemos que $T$ versiones de
+cada $Y_k$ son suficientes. Los resultados generales de este artículo no dependen del
+supuesto de no interferencia.
+
+\subsection{Definición de efectos causales}
+
+Los efectos causales de los tratamientos son comparaciones entre los valores $Y^t$. Por
+ejemplo, es habitual definir el efecto causal del tratamiento~1 frente al tratamiento~2
+sobre $Y_k$ para la $i$-ésima unidad experimental como el $i$-ésimo componente de
+$Y^1_k - Y^2_k$, $Y^1_{ki} - Y^2_{ki}$: la diferencia para la $i$-ésima unidad
+experimental entre $Y_k$ dado exposición al tratamiento~1 e $Y_k$ dado exposición al
+tratamiento~2. El problema fundamental que enfrenta la inferencia para efectos causales es
+que, si se asigna el tratamiento $t$ a la $i$-ésima unidad experimental (es decir, si
+$W_i = t$), solo pueden observarse los valores en $Y^t$; los valores $Y^j$ para $j \ne t$
+son no observables (o faltantes).
+
+Sin el supuesto de no interferencia discutido en la Sección~2.3, son necesarias
+definiciones más complicadas de efectos causales. Sin embargo, tales definiciones siguen
+involucrando comparaciones de valores de $Y_k$, de los cuales solo algunos podrían
+observarse en un estudio particular.
+
+\subsection{Indicador de datos faltantes}
+
+Las $c + dT$ columnas etiquetadas $M$ en la Figura~1 indican columnas de valores
+registrados y no registrados en $(X, Y)$ al momento del análisis de datos. Las $c$
+columnas etiquetadas $M^x_1, \ldots, M^x_c$ indican valores registrados y no registrados
+en $X_1, \ldots, X_c$: si $M^x_{ki} = 1$, entonces $X_{ki}$ es registrado para el
+análisis de datos; si $M^x_{ki} = 0$, entonces $X_{ki}$ no es registrado para el análisis
+de datos. Análogamente, las $d$ columnas etiquetadas $M^t_1, \ldots, M^t_d$ indican
+valores registrados y no registrados en $Y^t = (Y^t_1, \ldots, Y^t_d)$, $t = 1,\ldots,T$.
+Por simplicidad notacional suponemos que $W$ es siempre observado.
+
+El problema fundamental que enfrenta la inferencia para efectos causales queda reflejado
+en la restricción de que $W_i = t$ implica $M^j_{ki} = 0$ para todo $j \ne t$ y
+$k = 1, \ldots, d$. Es decir, no se pueden registrar valores bajo un tratamiento no
+asignado.
+
+A veces un elemento de $M$ es en sí mismo no registrado (por ejemplo, se toman dos
+mediciones de presión arterial en cada paciente, pero en algunos pacientes solo se registra
+un valor y no está claro si es la primera o la segunda medición). Como con $W_i$ no
+registrado, esto puede manejarse usando más variables indicadoras, pero la generalidad
+adicional aporta poca perspectiva y complica la notación. Por tanto, suponemos que $M$ es
+conocido en el momento del análisis de datos.
+
+En la práctica, el indicador $M$ refleja el mecanismo que decide qué valores registrar
+para el análisis de datos, los mecanismos que crean valores faltantes inesperados
+(accidentales), así como el mecanismo de muestreo y el mecanismo de asignación de
+tratamientos (a través de las restricciones impuestas sobre $M$ por $W$).
+
+\subsection{Un estudio específico}
+
+En nuestro modelo, suponemos que cualquier valor capaz de distinguir entre unidades experimentales se incluye en $(X, Y, W, M)$ con $W$ y $M$ completamente observados y $(X, Y)$ parcialmente observados. En un estudio específico de $T$ tratamientos, sean $\tilde{W}$ y $\tilde{M}$ los valores reales observados de $W$ y $M$, y por conveniencia notacional escribamos $\tilde{X} = (X_{(0)}, \tilde{X}_{(1)})$ y $\tilde{Y} = (Y_{(0)}, \tilde{Y}_{(1)})$, donde cada elemento de $(X_{(0)}, Y_{(0)})$ corresponde a un elemento de $\tilde{M}$ que es 0, y cada elemento de $(\tilde{X}_{(1)}, \tilde{Y}_{(1)})$ corresponde a un elemento de $\tilde{M}$ que es 1. Por lo tanto, $(\tilde{X}_{(1)}, \tilde{Y}_{(1)}, \tilde{W}, \tilde{M})$ está compuesto por números conocidos y $(X_{(0)}, Y_{(0)})$ está compuesto por incógnitas; nótese que estas particiones de $X$ e $Y$ están definidas por el valor observado de $M$, $\tilde{M}$.
+
+Dentro de la estructura desarrollada, los problemas de inferencia para efectos causales de los tratamientos sobre unidades experimentales individuales o colecciones de unidades experimentales son equivalentes a problemas de inferencia sobre valores de datos faltantes. Es decir, la mayor parte de $(X, Y)$ es faltante, como lo indica $\tilde{M}$. Si se observara la totalidad de $(X, Y)$ (lo cual es imposible), simplemente calcularíamos los efectos causales. Debido a los datos faltantes, debemos recurrir a un método de inferencia estadística para estimar los efectos causales. El interés aquí se centra en la inferencia bayesiana. Véase Rubin (1976) para una discusión general sobre la inferencia cuando se confrontan datos faltantes, y Rubin (1977a) para una breve discusión sobre los análogos de la distribución muestral para los resultados bayesianos aquí presentados.
+
+\subsection{Relacionando el modelo con el mundo real}
+
+Varios aspectos de nuestro modelo para efectos causales deben entenderse claramente antes de aplicarlo a problemas del mundo real. El tema común a lo largo de esta sección es la necesidad de una definición y comprensión claras de las acciones que se realizarán sobre aquellas unidades experimentales seleccionadas para tratamiento. 
+
+Primero, dentro de nuestro modelo, cada uno de los $T$ tratamientos debe consistir en una serie de acciones que podrían aplicarse a cada unidad experimental.  Este requisito puede parecer obvio, pero algunos usos coloquiales de "causa" especifican tratamientos que no pueden aplicarse o que son tan ambiguos que no se puede inferir ninguna serie de acciones a partir de la descripción del tratamiento; tales preguntas no tienen una respuesta causal dentro de nuestro marco. Por ejemplo, considere el efecto causal del sexo (masculino-femenino) sobre la inteligencia. ¿Cuáles son las acciones que deben aplicarse a cada unidad experimental y que definen los tratamientos?  ¿Debemos administrar inyecciones de hormonas desde el nacimiento y realizar quirúrgicamente una operación de "cambio de sexo", o en la concepción "cambiar" los cromosomas Y y los cromosomas X? Incluso si un "cambio de cromosoma X por Y en la concepción" se volviera posible, presumiblemente se desarrollarían varias técnicas para efectuar el cambio con efectos causales potencialmente diferentes. Sin definiciones de tratamiento que especifiquen las acciones a realizar en las unidades experimentales, no podemos discutir de manera inequívoca los efectos causales de los tratamientos. 
+
+Segundo, en nuestro modelo, los efectos causales que se estiman reflejan las manipulaciones previas al tratamiento realizadas en las unidades experimentales muestreadas, así como las diferentes acciones que definen los tratamientos.  Por ejemplo, supongamos que en un experimento médico todos los pacientes muestreados son expuestos a un examen médico exhaustivo antes de que se asignen los tratamientos. Los efectos causales que se estiman en tal estudio asumen que estos exámenes se administran a las unidades experimentales antes de la exposición al tratamiento. Si las manipulaciones previas al tratamiento realizadas en las unidades experimentales muestreadas son muy diferentes de las manipulaciones previas al tratamiento que probablemente se utilizarán con futuras unidades experimentales expuestas a los tratamientos, puede ser prudente considerar el estudio de manipulaciones previas al tratamiento más realistas, ya que pueden existir interacciones entre los tratamientos y dichas manipulaciones.
+
+Finalmente, en nuestro modelo, no podemos atribuir la causa a una acción particular dentro de la serie de acciones que definen un tratamiento.  Por lo tanto, los tratamientos que parecen similares debido a una acción destacada común no son el mismo tratamiento y pueden no tener efectos causales similares. Una implicación práctica importante es que los tratamientos administrados en condiciones de doble ciego son tratamientos diferentes a los administrados en condiciones ciegas o simples, y pueden tener efectos causales diferentes; véase Rosenthal (1976) para un resumen de los estudios sobre las interacciones entre los experimentadores y sus sujetos. Las versiones doble ciego de los tratamientos son generalmente de mayor interés científico, aunque las versiones simples de los tratamientos pueden ser, de hecho, de interés aplicado más inmediato.  Por ejemplo, en un experimento para comparar la aspirina y un medicamento recetado, las versiones simples de los tratamientos pueden ser importantes porque, en la práctica, un paciente generalmente sabrá si su médico le está recomendando aspirina en lugar de un medicamento recetado.  En algunos casos, entonces, puede ser prudente considerar el estudio de versiones tanto científicas (doble ciego) como aplicadas (simples) de los tratamientos, ya que distintas versiones de tratamientos, al ser tratamientos diferentes, pueden tener efectos causales diferentes. 
+
+% -------------------------------------------------------
+\section{La distribución de las variables aleatorias}
+% -------------------------------------------------------
+
+La inferencia bayesiana considera los valores observados $\tilde{X}_{(1)}$, $\tilde{Y}_{(1)}$, $\tilde{W}$, $\tilde{M}$ como realizaciones de variables aleatorias y los valores faltantes $X_{(0)}$, $Y_{(0)}$ como variables aleatorias no observadas. Para un estudio de $T$ tratamientos, las variables aleatorias son, por tanto, $(X, Y, W, M)$. Existe una especificación para la distribución de las variables aleatorias dado un parámetro (vector) desconocido $\pi$, el cual es en sí mismo una variable aleatoria con una distribución a priori (o marginal) conocida. Por razones que se darán en breve, sea $f(X,Y|\pi)k(W|X,Y,\pi)g(M|X,Y,W,\pi)$ la función de densidad de probabilidad conjunta para las variables aleatorias $(X, Y, W, M)$ dado $\pi$, y sea $p(\pi)$ la distribución a priori de $\pi$.\footnote{En realidad $p(\pi)$ es la distribución condicional de $\pi$ dada la elección de las familias de modelos $f, k, g$. Escribiendo $\pi_{Y,X}$ para la función de $\pi$ que aparece en $f$, la distribución de $\pi_{Y,X}$ dada la familia de modelos $f, g, k$ puede o no ser la misma que la distribución de $\pi_{Y,X}$ dada $f$, dependiendo de la distribución asignada al proceso de elección de los modelos $f, k, g$. La distribución de $\pi_{Y,X}$ dada $f$ (no dada $f, k, g$) es presumiblemente lo que un bayesiano entiende por la distribución a priori del parámetro de los datos. Esta distinción suele ser poco importante en la práctica cuando las distribuciones a priori se eligen para ser relativamente difusas.} 
+
+La distribución $f(X,Y|\pi)$ es la densidad marginal de los datos potencialmente observables $(X, Y)$ dado el parámetro $\pi$. La distribución $k(W|X,Y,\pi)$ es la probabilidad de la asignación $W$ de tratamientos dado el valor $(X, Y)$ para los datos y el parámetro $\pi$; llamamos a $k(W|X,Y,\pi)$ el \textit{mecanismo de asignación} ya que refleja los mecanismos que seleccionan las unidades experimentales para ser expuestas a tratamientos y asignan los tratamientos a las unidades experimentales seleccionadas. La distribución $g(M|X,Y,W,\pi)$ es la probabilidad del patrón $M$ de valores registrados y no registrados en $X, Y$ dado: el valor $(X, Y)$ para los datos, el valor $W$ para la asignación de tratamientos y el parámetro $\pi$; llamamos a $g(M|X,Y,W,\pi)$ el \textit{mecanismo de registro} ya que refleja los mecanismos que determinan qué valores se registran para el análisis de datos.
+
+El propósito de formular todas estas distribuciones es simplemente vincular los valores no observados con los valores observados, de manera que los valores que vemos nos digan algo sobre los valores que no vemos. Esta perspectiva sostiene que los modelos solo se utilizan para extraer inferencias sobre los valores no observados $X_{(0)}$, $Y_{(0)}$, y con ello estimar los efectos causales de los tratamientos.
+
+\subsection{Restricciones sobre la distribución a priori de los datos}
+
+Por suposición (Sección 2.6), todos los valores capaces de distinguir entre unidades experimentales se incluyen en $(X, Y, W, M)$. Por lo tanto, sin pérdida de generalidad podemos suponer que los índices de las unidades experimentales se asignan como una permutación aleatoria de los enteros $1,\dots, N$. Al hacerlo, la distribución $f(X,Y|\pi)k(W|X,Y,\pi)g(M|X,Y,W,\pi)$ debe permanecer constante bajo cualquier permutación de los índices de las filas de $(X, Y, W, M)$. De manera similar, la distribución $f(X,Y|\pi)$ debe permanecer constante bajo cualquier permutación de los índices de las filas de $(X, Y)$.
+
+A partir de los resultados estándar sobre variables aleatorias intercambiables con $N$ infinito (de Finetti, 1964; Hewitt y Savage, 1955; Feller, 1965, páginas 225-226) y de las extensiones recientes para $N$ finito (Diaconis, 1976), se deduce que podemos suponer sin casi ninguna pérdida de generalidad que las filas de $(X, Y)$ son independientes e idénticamente distribuidas (i.i.d.) dado $\pi$:
+
+\begin{equation}\label{eq:3.1}
+f(X,Y|\pi) = \prod_{i=1}^{N} f_*((X,Y)_i|\pi) \tag{3.1}
+\end{equation}
+
+\noindent donde $(X,Y)_i$ es la $i$-ésima fila de $(X, Y)$.
+
+En la práctica, se imponen otras restricciones además de la ecuación (3.1) sobre $f(X,Y|\pi)$. Ya se han discutido las restricciones sobre $Y$ que se derivan del supuesto habitual de no interferencia entre unidades experimentales. De forma menos común, se puede suponer que una $Y_k$ particular tiene el mismo valor sin importar qué tratamiento se aplique: $Y_k^1 = Y_k^2 = \cdots = Y_k^T$ (por ejemplo, al estudiar si un aditivo en la dieta de los pacientes disminuye el colesterol en la sangre, la precisión del experimento podría mejorarse utilizando "la cantidad de grasa saturada ingerida" como covariable, afirmando que su valor no se ve afectado por el aditivo).
+
+Dado que en cualquier problema práctico, cualquier $Y$ o cualquier $X$ solo puede tomar un número finito de valores distintos, sin pérdida de generalidad $f(X,Y|\pi)$ puede suponerse como una distribución multinomial sin restricciones sobre la tabla de contingencia de dimensión $c+Td$ de valores posibles de $X, Y$. A menudo, para reducir el número de parámetros que aparecen en esta tabla de contingencia, $p(\pi)$ impone severas restricciones sobre estos parámetros y, por lo tanto, suaviza las probabilidades multinomiales. Las restricciones a priori que modelan cada fila de $(X, Y)$ como, por ejemplo, una normal multivariante, reflejan los esfuerzos habituales en la construcción de modelos.
+
+\subsection{Mecanismos ignorables de asignación y registro}
+
+La inclusión explícita de $W$ y $M$ como variables aleatorias no es estándar, pero es central para comprender la inferencia bayesiana de los efectos causales. Además, la factorización de la distribución conjunta de $(X, Y, W, M)$ utilizada anteriormente aísla diferencias esenciales entre las variables aleatorias $(X, Y)$, $W$ y $M$. El modelo $f(X,Y|\pi)$ nunca está totalmente bajo el control del experimentador, ya que la distribución condicional de $Y$ dado $X$ refleja el estado de la naturaleza; la distribución marginal de $X$ está hasta cierto punto bajo el control del experimentador, ya que define $P$ mediante la elección de las unidades experimentales. El mecanismo de asignación $k(W|X,Y,\pi)$ puede estar bajo el control del experimentador, ya que puede asignar tratamientos a las unidades experimentales. El mecanismo de registro $g(M|X,Y,W,\pi)$ está principalmente bajo el control del experimentador, ya que, sujeto a las restricciones de la asignación de tratamientos y aparte de datos faltantes inesperados, él controla qué valores se registran para el análisis de datos.
+
+Por lo tanto, los mecanismos de asignación y registro difieren del modelo de la distribución de los datos en que pueden ser "conocidos" a priori en el siguiente sentido.
+
+\begin{definition}
+El mecanismo de asignación $k(W|X,Y,\pi)$ es ignorable en $(\tilde{X}_{(1)}, \tilde{Y}_{(1)}, \tilde{W}, \tilde{M})$ si la probabilidad del patrón observado de asignaciones de tratamientos dados $X, Y$ y $\pi$, denotada por $k(\tilde{W}|X,Y,\pi)$, toma el mismo valor conocido para todos los posibles valores de las incógnitas $X_{(0)}$, $Y_{(0)}$, $\pi$.
+\end{definition}
+
+\begin{definition}
+El mecanismo de registro $g(M|X,Y,W,\pi)$ es ignorable en $(\tilde{X}_{(1)}, \tilde{Y}_{(1)}, \tilde{W}, \tilde{M})$ si la probabilidad del patrón observado de valores registrados dados $X, Y, W$ y $\pi$, denotada por $g(\tilde{M}|X,Y,\tilde{W},\pi)$, toma el mismo valor conocido para todos los posibles valores de las incógnitas $X_{(0)}$, $Y_{(0)}$, $\pi$.
+\end{definition}
+
+Si el mecanismo de asignación depende de los valores de $(X, Y)$, entonces esos valores deben ser recolectados por el mecanismo de registro para que el mecanismo de asignación sea ignorable. Por ejemplo, considérese un estudio de dos tratamientos y el mecanismo secuencial $k(W|X,Y,\pi)$ de "jugar al ganador" (play-the-winner) en el que el próximo paciente recibe el tratamiento que los datos anteriores sugieren que es mejor; todos los valores utilizados para tomar estas decisiones, como el orden de entrada al estudio, deben registrarse para el análisis de datos a fin de que el mecanismo de asignación sea ignorable. De manera similar, si un médico asigna pacientes a tratamientos con la intención de equilibrar la distribución de covariables como la edad y el sexo, estas variables deben registrarse si se quiere que el mecanismo de asignación sea ignorable. Si un médico asigna tratamientos según sus juicios no registrados sobre la salud de los pacientes, el mecanismo de asignación no es ignorable. O si los pacientes eligen los tratamientos por sí mismos basándose en sus opiniones no registradas sobre su salud, el mecanismo de asignación no es ignorable.
+
+Estos ejemplos ilustran que para un mecanismo de asignación particular, uno puede elegir un mecanismo de registro que haga que el mecanismo de asignación no sea ignorable, excepto cuando $k(W|X,Y,\pi)=k(W|\pi)$ (por ejemplo, en un muestreo aleatorio simple seguido de un experimento completamente aleatorizado). Cuanto más complejo sea el mecanismo de asignación (en el sentido de depender de una mayor cantidad de valores), más completo debe ser el mecanismo de registro para que el mecanismo de asignación sea ignorable.
+
+Además, el mecanismo de asignación no puede depender de parámetros (desconocidos) si ha de ser ignorable. Por ejemplo, si en el estudio de "jugar al ganador" la regla de parada para concluir el experimento (dejando que los siguientes $W_i=0$) está determinada por un criterio no registrado del experimentador fundamentado en "tener evidencia suficiente", el mecanismo de asignación no es ignorable ya que el criterio es desconocido y, por tanto, representa alguna función del parámetro $\pi$. En estudios observacionales (Cochran y Rubin, 1973), como aquellos sobre enfermedades cardíacas y tabaquismo, el mecanismo de asignación está más allá del control del experimentador y, por ende, generalmente no es razonable modelarlo como ignorable.
+
+El mecanismo de registro $g(M|X,Y,W,\pi)$ está en gran medida bajo el control del experimentador/analista de datos. De hecho, en casi cualquier análisis de datos real, algunos valores que podrían registrarse terminan siendo ignorados. Por ejemplo, a menudo las etiquetas de las unidades, los tiempos de inicio de los tratamientos y otros aspectos que a priori se consideran poco relevantes (por ejemplo, la longitud de los dedos de los pacientes) no se registran para el análisis de datos. Estas decisiones a priori están completamente especificadas e implican mecanismos de registro que son ignorables. Sin embargo, si existe la posibilidad de valores faltantes involuntarios (accidentales), el mecanismo de registro no sería ignorable (excepto por suposición), incluso si no existieran valores faltantes accidentales, ya que la probabilidad de tal ocurrencia podría ser una función de valores en $(X_{(0)},Y_{(0)})$ o de $\pi$ (por ejemplo, tal vez se observe $Y_{1i}^1$ porque es menor que alguna función de $\pi$, o porque $Y_{1i}^2$ habría sido mayor que 0).
+
+% -------------------------------------------------------
+\section{Inferencia bayesiana para efectos causales}
+% -------------------------------------------------------
+
+Utilizando las distribuciones definidas en la Sección 3, la inferencia bayesiana para efectos causales procede calculando la distribución predictiva de $Y_{(0)}$ dados los valores observados, $\tilde{X}_{(1)}$, $\tilde{Y}_{(1)}$, $\tilde{W}$, $\tilde{M}$: % [cite: 208]
+
+\begin{equation}\label{eq:4.1}
+\operatorname{Pre}(Y_{(0)}|\tilde{X}_{(1)},\tilde{Y}_{(1)},\tilde{W},\tilde{M}) = \frac{\iint k(\tilde{W}|\tilde{X},\tilde{Y},\pi)g(\tilde{M}|\tilde{X},\tilde{Y},\tilde{W},\pi)f(\tilde{X},\tilde{Y}|\pi)p(\pi)d\pi~dX_{(0)}}{\iint k(W|\tilde{X},\tilde{Y},\pi)g(M|\tilde{X},\tilde{Y},W,\pi)f(\tilde{X},\tilde{Y}|\pi)p(\pi)d\pi~dX_{(0)}dY_{(0)}} \tag{4.1}
+\end{equation} % [cite: 209, 210, 211]
+
+La densidad predictiva (4.1), en conjunción con los valores observados $Y_{(1)}$, produce las inferencias bayesianas para los efectos causales de los $T$ tratamientos para las $N$ unidades experimentales en la población $P$. % [cite: 212] Comúnmente, se calcula la distribución predictiva de las medias de las columnas de $Y$, siendo la diferencia entre cada par de medias el efecto causal promedio en $P$ de un tratamiento respecto a otro. % [cite: 212] También es común calcular distribuciones predictivas para efectos causales promedio en varios subgrupos de $P$ (por ejemplo, hombres y mujeres). % [cite: 213]
+
+\subsection{El papel de los mecanismos ignorables de asignación y registro} % [cite: 214]
+
+\begin{theorem}
+Si los mecanismos de asignación y registro son ignorables, entonces la inferencia bayesiana para efectos causales está completamente determinada por: % [cite: 215]
+
+(a) los valores observados $\tilde{X}_{(1)}$, $\tilde{Y}_{(1)}$, $\tilde{M}$, % [cite: 216]
+
+(b) la especificación para la distribución condicional de $Y$ dado $X_{(1)}$ y $\pi$: % [cite: 219]
+\begin{equation}\label{eq:4.2}
+h(Y|X_{(1)},\pi) = \frac{\int f(X,Y|\pi)dX_{(0)}}{\iint f(X,Y|\pi)dX_{(0)}dY} \tag{4.2}
+\end{equation} % [cite: 220, 222]
+
+y (c) la especificación para la distribución condicional de $\pi$ dado $X_{(1)}$: % [cite: 223]
+\begin{equation}\label{eq:4.3}
+q(\pi|X_{(1)}) = \frac{p(\pi)\iint f(X,Y|\pi)dX_{(0)}dY}{\iiint f(X,Y|\pi)dX_{(0)}dY~d\pi} \tag{4.3}
+\end{equation} % [cite: 224, 225]
+\end{theorem}
+
+\begin{proof}
+Este resultado es inmediato porque, a partir de las definiciones de los mecanismos ignorables, la ecuación (4.1) puede reescribirse como: % [cite: 226]
+\begin{equation}\label{eq:4.4}
+\operatorname{Pre}(Y_{(0)}|\tilde{X}_{(1)},\tilde{Y}_{(1)},\tilde{W},\tilde{M}) = \frac{\int h(\tilde{Y}|\tilde{X}_{(1)},\pi)q(\pi|\tilde{X}_{(1)})d\pi}{\iint h(\tilde{Y}|\tilde{X}_{(1)},\pi)q(\pi|\tilde{X}_{(1)})d\pi~dY_{(0)}} \tag{4.4}
+\end{equation} % [cite: 227]
+\end{proof}
+
+Este teorema muestra que, dados mecanismos de asignación y registro ignorables, la inferencia para efectos causales se deriva de los valores observados y de la especificación habitual de los datos, ignorando los mecanismos de asignación y registro. En la práctica, suele ocurrir una mayor simplificación en el caso de mecanismos de asignación y registro ignorables. Es común parametrizar $f(X,Y|\pi)$ de modo que la distribución condicional de $Y$ dado $X$ dependa de una función de $\pi$, digamos $\pi_{Y|X}(\pi)$, y la distribución marginal de $X$ dependa de otra función de $\pi$, digamos $\pi_{x}(\pi)$, donde $\pi_{Y|X}$ y $\pi_{x}$ son a priori independientes.  Por ejemplo, en los modelos de regresión normal, $\pi_{Y|X}$ incluye los coeficientes de regresión de $Y$ sobre $X$ y la covarianza condicional de $Y$ dado $X$, y estos a menudo se declaran independientes a priori del parámetro de la distribución marginal de $X$, $\pi_{x}$. Con tales modelos y mecanismos de asignación y registro ignorables, las inferencias para efectos causales están determinadas simplemente por los valores observados $\tilde{X}_{(1)}$, $\tilde{Y}_{(1)}$, $\tilde{M}$, y las especificaciones a priori para la distribución condicional de $Y$ dado $X_{(1)}$ y la distribución marginal de $\pi_{Y|X}$. 
+
+Si el mecanismo de asignación o el mecanismo de registro no es ignorable, un análisis bayesiano válido se deriva de (4.1); utilizar (4.4) en lugar de (4.1) no produce un análisis bayesiano válido.  Sin embargo, en la práctica, los mecanismos que no son ignorables debido a la dependencia en $(X_{(0)},Y_{(0)})$ usualmente plantean un problema mayor que aquellos que no son ignorables únicamente por la dependencia en $\pi$. La razón es que, en muchos problemas prácticos, es común elegir distribuciones a priori que sean relativamente difusas y que reflejen dependencias a priori débiles entre los parámetros. En una notación análoga a la utilizada anteriormente, si $\pi_{X,Y}(\pi)$ y $\pi_{W,M|X,Y}(\pi)$ son independientes a priori, entonces si ni $k(\tilde{W}|\tilde{X},\tilde{Y},\pi)$ ni $g(\tilde{M}|\tilde{X},\tilde{Y},\tilde{W},\pi)$ dependen de $(X_{(0)},Y_{(0)})$, las inferencias para los efectos causales se derivan de (4.4). Por supuesto, si $\pi_{X,Y}$ y $\pi_{W,M|X,Y}$ no son independientes a priori, las inferencias para los efectos causales variarán según la especificación de la relación a priori entre ellos. %
+
+Si ya sea $k(\tilde{W}|\tilde{X},\tilde{Y},\pi)$ o $g(\tilde{M}|\tilde{X},\tilde{Y},\tilde{W},\pi)$ depende de $(X_{(0)},Y_{(0)})$, la inferencia para los efectos causales (ecuación (4.1)) depende de las relaciones entre los valores observados $(\tilde{X}_{(1)},\tilde{Y}_{(1)})$ y los valores faltantes utilizados para asignar tratamientos y/o registrar valores.Puesto que los valores observados no pueden estimar directamente estas relaciones, las inferencias causales varían con su especificación a priori, y generalmente es inapropiado suponer que los valores no observados dados, utilizados para asignar tratamientos y/o registrar datos, no están correlacionados con los valores observados $(X_{(1)},Y_{(1)})$. 
+
+\subsection{Ilustrando la sensibilidad de las inferencias para efectos causales}
+
+Supongamos que $T=2$ y que se extrae una muestra aleatoria de $n$ unidades experimentales (por ejemplo, pacientes) de $P$ para su exposición a los tratamientos (por ejemplo, operaciones). Supongamos también que el mecanismo de registro anota un valor $Y_1$ para cada una de las $n$ unidades experimentales expuestas a un tratamiento, pero no registra ningún otro valor; $Y_1$ es dicotómica: 1 indica éxito (por ejemplo, de la operación) y 0 indica fracaso. Sea $\overline{y}^t = \sum_{i=1}^N Y_{1i}^t / N$ la proporción de unidades experimentales en $P$ para las cuales el tratamiento $t$ es exitoso, y supongamos por simplicidad que el interés se centra en la distribución predictiva de $(\overline{Y}_1^1, \overline{Y}_1^2)$.
+
+Primero, asumamos que cada unidad experimental de la muestra se asigna con probabilidad $1/2$ al tratamiento 1 y con probabilidad $1/2$ al tratamiento 2. Por lo tanto, los mecanismos de asignación y registro son ignorables. Por el teorema de la Sección 4.1, las inferencias para los efectos causales están determinadas por los valores observados $(\tilde{Y}_{(1)}, \tilde{M})$ y por las especificaciones para la distribución conjunta de $(Y_1^1, Y_1^2)$ dado $\pi$ y la distribución a priori de $\pi$.
+
+Sean las filas de $(Y_1^1, Y_1^2)$ dado $\pi$ i.i.d. con $\pi^t = \pi^t(\pi)$ la probabilidad a priori de que $Y_{1i}^t = 1$, $t=1, 2$. Por lo tanto, el modelo para $(Y_1^1, Y_1^2)$ es una tabla de contingencia de $2 \times 2$, siendo $Y_{1i}^t$ binomial con probabilidad $\pi^t$ de éxito, $t=1, 2$; véase la Figura 2a.
+
+No parametrizamos explícitamente la distribución conjunta de $(Y_1^1, Y_1^2)$ por la siguiente razón. En la mayoría de los casos prácticos, la población de unidades experimentales que podrían ser expuestas a los tratamientos en estudio se considera mucho mayor que la muestra de unidades experimentales expuestas a los tratamientos. Dado que cuando $N/n \rightarrow \infty$ la distribución predictiva de $(\overline{Y}_1^1, \overline{Y}_1^2)$ converge a la distribución a posteriori de $(\pi^1, \pi^2)$, el interés se centra a menudo en esta distribución a posteriori, considerando los demás parámetros como perturbadores.
+
+% --- Figura 2 ---
+\begin{figure}[ht]
+\centering
+\renewcommand{\arraystretch}{1.5}
+% Tabla 2a
+\begin{minipage}{0.32\textwidth}
+\centering
+\small Distribución marginal\\de $(Y_1^1, Y_1^2)$\\[1ex]
+\begin{tabular}{r c|c|c|l}
+  \multicolumn{2}{c}{} & \multicolumn{2}{c}{$Y_1^1$} & \\
+  & & \multicolumn{1}{c}{1} & \multicolumn{1}{c}{0} & \\
+  \cline{3-4}
+  $Y_1^2$ & 1 & & & $\pi^2$ \\
+  \cline{3-4}
+  & 0 & & & $1-\pi^2$ \\
+  \cline{3-4}
+  \multicolumn{2}{c}{} & \multicolumn{1}{c}{$\pi^1$} & \multicolumn{1}{c}{$1-\pi^1$} &
+\end{tabular}\\[1ex]
+\textbf{2a}
+\end{minipage}%
+% Tabla 2b
+\begin{minipage}{0.32\textwidth}
+\centering
+\small Distribución condicional de\\$(Y_1^1, Y_1^2)$ dado $X_1=1$\\[1ex]
+\begin{tabular}{r c|c|c|l}
+  \multicolumn{2}{c}{} & \multicolumn{2}{c}{$Y_1^1$} & \\
+  & & \multicolumn{1}{c}{1} & \multicolumn{1}{c}{0} & \\
+  \cline{3-4}
+  $Y_1^2$ & 1 & & & $\alpha^2\pi^2$ \\
+  \cline{3-4}
+  & 0 & & & $1-\alpha^2\pi^2$ \\
+  \cline{3-4}
+  \multicolumn{2}{c}{} & \multicolumn{1}{c}{$\alpha^1\pi^1$} & \multicolumn{1}{c}{$1-\alpha^1\pi^1$} &
+\end{tabular}\\[1ex]
+\textbf{2b}
+\end{minipage}%
+% Tabla 2c
+\begin{minipage}{0.32\textwidth}
+\centering
+\small Distribución condicional de\\$(Y_1^1, Y_1^2)$ dado $X_1=2$\\[1ex]
+\begin{tabular}{r c|c|c|l}
+  \multicolumn{2}{c}{} & \multicolumn{2}{c}{$Y_1^1$} & \\
+  & & \multicolumn{1}{c}{1} & \multicolumn{1}{c}{0} & \\
+  \cline{3-4}
+  $Y_1^2$ & 1 & & & $\pi^2(2-\alpha^2)$ \\
+  \cline{3-4}
+  & 0 & & & $1-\pi^2(2-\alpha^2)$ \\
+  \cline{3-4}
+  \multicolumn{2}{c}{} & \multicolumn{1}{c}{$\pi^1(2-\alpha^1)$} & \multicolumn{1}{c}{$1-\pi^1(2-\alpha^1)$} &
+\end{tabular}\\[1ex]
+\textbf{2c}
+\end{minipage}
+\caption{Especificación de la distribución de $(Y_1^1, Y_1^2, X_1)$ para los ejemplos.}
+\end{figure}
+
+Sea $\overline{y}^t = \sum_{i=1}^N \tilde{Y}_{1i}^t \tilde{M}_{1i}^t / n^t$ (donde $n^t = \sum_{i=1}^N \tilde{M}_{1i}^t$), la proporción observada de unidades experimentales expuestas a la operación $t$ para la cual la operación es exitosa, $t=1, 2$. Entonces, la distribución a posteriori de $\pi$ es proporcional a:
+
+\begin{equation}\label{eq:4.5}
+p(\pi) \prod_{t=1}^2 [\pi^t]^{n^t \overline{y}^t} [1-\pi^t]^{n^t(1-\overline{y}^t)} \tag{4.5}
+\end{equation}
+
+Para dramatizar la reducida sensibilidad a la especificación del modelo que es posible cuando se utilizan mecanismos ignorables, considérese el caso de muestras grandes con $n \rightarrow \infty$ y $N/n \rightarrow \infty$. La distribución a posteriori límite de $\pi$ con una $p(\pi)$ que asigna densidad positiva a todo $(\pi^1, \pi^2) \in [0,1] \times [0,1]$ es entonces proporcional a:
+
+\begin{equation}\label{eq:4.6}
+p(\pi)\prod_{t=1}^2 \delta(\pi^t - \overline{y}^t) \tag{4.6}
+\end{equation}
+
+\noindent donde $\delta(a)=1$ si $a=0$, y $=0$ en otro caso. Así, en este caso límite, la distribución predictiva de $(\overline{Y}_1^1, \overline{Y}_1^2)$ converge a una masa puntual en $(\overline{y}^1, \overline{y}^2)$.
+
+Si los mecanismos de asignación y/o registro no son ignorables, las inferencias para $(\overline{Y}_1^1, \overline{Y}_1^2)$ son sensibles a las especificaciones a priori incluso cuando $n \rightarrow \infty$ y $N/n \rightarrow \infty$. Una extensión del ejemplo anterior ilustrará este hecho. Como antes, supongamos que (a) el mecanismo de registro anota solo los valores de $Y_1$, (b) las $n$ unidades experimentales expuestas a los tratamientos son una muestra aleatoria de $P$, y (c) la distribución a priori de $(Y_1^1, Y_1^2)$ es la tabla de contingencia de $2 \times 2$ en la Figura 2a. Sin embargo, supongamos ahora que la variable dicotómica no registrada $X_1$ (por ejemplo, la evaluación del médico del estado de salud antes de la operación) se utiliza para asignar tratamientos a las unidades experimentales muestreadas: si $X_{1i}=1$ (buena salud), con probabilidad $\theta = \theta(\pi)$ la $i$-ésima unidad experimental (si es muestreada) se expone al tratamiento 1 y con probabilidad $(1-\theta)$ se expone al tratamiento 2; si $X_{1i}=2$ (mala salud), con probabilidad $(1-\theta)$ la $i$-ésima unidad experimental (si es muestreada) se expone al tratamiento 1 y con probabilidad $\theta$ se expone al tratamiento 2.
+
+Sean las filas de $(Y_1, X_1)$ i.i.d. dado $\pi$, donde la probabilidad a priori de que $X_{1i}=k$ es $0.5$, $k=1,2$, y $\alpha^t\pi^t \le 1$ es la probabilidad a priori de que $Y_{1i}^t=1$ dado $X_{1i}=1$, $\alpha^t = \alpha^t(\pi) \le 2$. Por lo tanto, el modelo para $(Y_1^1, Y_1^2, X_1)$ es una tabla de contingencia de $2 \times 2 \times 2$ donde $X_{1i}$ es binomial $0.5$, y condicionado a $X_{1i}=k$, $Y_{1i}^t$ es binomial con probabilidad de éxito $\alpha^t\pi^t$ si $k=1$ y $\pi^t(2-\alpha^t)$ si $k=2$; véase la Figura 2.
+
+En este caso no ignorable es fácil demostrar\footnote{
+$\operatorname{Pr}(Y_{1i}^t=1 | W_i=t, \pi) = \operatorname{Pr}(W_i=t | \pi)^{-1} \operatorname{Pr}(Y_{1i}^t=1, W_i=t | \pi) \\
+= 2 \sum_{k=1}^2 \operatorname{Pr}(X_{1i}=k | \pi) \operatorname{Pr}(Y_{1i}^t=1, W_i=t | X_{1i}=k, \pi) \\
+= \sum_{k=1}^2 \operatorname{Pr}(W_i=t | Y_{1i}^t=1, X_{1i}=k, \pi) \operatorname{Pr}(Y_{1i}^t=1 | X_{1i}=k, \pi) \\$
+donde $\operatorname{Pr}(W_i=t | Y_{1i}^t=1, X_{1i}=k, \pi) = \theta$ si $t=k$, y $= 1-\theta$ si $t \ne k$, 
+y $\operatorname{Pr}(Y_{1i}^t=1 | X_{1i}=k, \pi) = \pi^t\alpha^t$ si $k=1$, y $= \pi^t(2-\alpha^t)$ si $k=2$.
+} que:
+
+\begin{align}\label{eq:4.7}
+\operatorname{Pr}(Y_{1i}^t=1 | W_i=t, \pi) &= \xi^t = \xi^t(\pi) \notag\\
+&= \pi^1[2(1-\theta) + \alpha^1(2\theta-1)] \quad \text{si } t=1 \tag{4.7}\\
+&= \pi^2[2\theta + \alpha^2(1-2\theta)] \quad \text{si } t=2. \notag
+\end{align}
+
+De ahí que la distribución a posteriori de $\pi$ sea proporcional a:
+
+\begin{equation}\label{eq:4.8}
+p(\pi) \prod_{t=1}^2 [\xi^t]^{n^t \overline{y}^t} [1-\xi^t]^{n^t(1-\overline{y}^t)} \tag{4.8}
+\end{equation}
+
+Supongamos que $p(\pi)$ asigna densidad positiva a todo $(\xi^1, \xi^2) \in [0,1] \times [0,1]$. Entonces, cuando $n \rightarrow \infty$ y $N/n \rightarrow \infty$, la distribución a posteriori límite de $\pi$ es proporcional a:
+
+\begin{equation}\label{eq:4.9}
+p(\pi) \prod_{t=1}^2 \delta(\xi^t - \overline{y}^t) \tag{4.9}
+\end{equation}
+
+Supongamos, además, que condicionada a que cada $(\theta, \alpha^1, \alpha^2)$ tenga una densidad a priori positiva, $p(\pi)$ asigna una densidad a priori positiva a todo $(\pi^1, \pi^2) \in [0,1] \times [0,1]$. Entonces, condicionado a un $(\theta, \alpha^1, \alpha^2)$ que tiene densidad a posteriori positiva, la distribución predictiva de $(\overline{Y}_1^1, \overline{Y}_1^2)$ converge a una masa puntual en:
+
+\begin{equation}\label{eq:4.10}
+\left( \frac{\overline{y}^1}{2(1-\theta) + \alpha^1(2\theta - 1)}, \frac{\overline{y}^2}{2\theta + \alpha^2(1-2\theta)} \right) \tag{4.10}
+\end{equation}
+
+Por lo tanto, la distribución predictiva límite de $(\overline{Y}_1^1, \overline{Y}_1^2)$ es la expresión (4.10) promediada sobre la distribución a posteriori de $(\theta, \alpha^1, \alpha^2)$, que es simplemente la expresión (4.10) promediada sobre la distribución a priori de $(\theta, \alpha^1, \alpha^2)$ restringida a valores de $(\theta, \alpha^1, \alpha^2)$ tales que para $t=1,2$, (a) el $t$-ésimo componente de (4.10) es $\le 1$ y (b) $\alpha^t$ veces el $t$-ésimo componente de (4.10) es $\le 1$. En consecuencia, incluso en este caso límite, la distribución predictiva de $(\overline{Y}_1^1, \overline{Y}_1^2)$ será bastante sensible a la especificación de la distribución a priori de $(\theta, \alpha^1, \alpha^2)$.
+
+Si $\theta = 1/2$, cada unidad experimental se asignó con probabilidad $1/2$ a cada condición de tratamiento, el mecanismo de asignación es ignorable, y la distribución predictiva converge a una masa puntual en $(\overline{y}^1, \overline{y}^2)$. O si $\alpha^1 = \alpha^2 = 1$, $X_1$ es a priori independiente de $(Y_1^1, Y_1^2)$ (y, por lo tanto, equivalente a un número aleatorio binario), el mecanismo de asignación es equivalente a un mecanismo ignorable, y la distribución predictiva converge a una masa puntual en $(\overline{y}^1, \overline{y}^2)$. Sin embargo, en general, la distribución predictiva de $(\overline{Y}_1^1, \overline{Y}_1^2)$ no converge a un único punto, ya que los posibles valores de los componentes de (4.10) varían entre $\overline{y}^t/2$ y $\overline{y}^t/2 + 0.5$.
+
+Dado que la función de verosimilitud en (4.5) tiene un único valor maximizador de $(\pi^1, \pi^2)$ igual a $(\overline{y}^1, \overline{y}^2)$ mientras que la verosimilitud en (4.8) tiene una cresta de valores maximizadores de $(\pi^1, \pi^2)$ definida al igualar $(\pi^1, \pi^2)$ a la expresión (4.10), en muestras finitas el mecanismo de asignación no ignorable conducirá a inferencias para los efectos causales más sensibles a $p(\pi)$ que la asignación ignorable. En problemas con datos reales, tamaños de muestra moderados y mecanismos de asignación y/o registro que no son ignorables, la consideración de modelos realistas para $f(X,Y|\pi)p(\pi)$ puede conducir fácilmente a tal variedad de inferencias bajo los diferentes modelos, o a una varianza a posteriori tan grande cuando se impone una distribución a priori específica sobre los modelos, que el bayesiano podría considerar que sus datos carecen de valor para la inferencia de efectos causales.
+
+\subsection{Mecanismos ignorables poco adecuados para la inferencia causal}
+
+El ejemplo de la Sección 4.2 indicó los difíciles problemas de inferencia para efectos causales que pueden surgir cuando el mecanismo de asignación no es ignorable: un análisis bayesiano válido puede fácilmente ser muy sensible a la especificación de los datos $f(X,Y|\pi)p(\pi)$. Esto no implica que todas las combinaciones de mecanismos de asignación y registro ignorables conduzcan a datos a partir de los cuales las inferencias causales sean insensibles a la especificación de los datos. Por el teorema de la Sección 4.1, incluso con mecanismos de asignación y registro ignorables y $\pi_{Y|X}$ a priori independiente de $\pi_x$, aún debemos estimar la distribución condicional de $Y$ dado $\tilde{X}_{(1)}$, y esto puede ser un problema. Si las unidades experimentales expuestas a un tratamiento tienen valores de $\tilde{X}_{(1)}$ diferentes a los de las unidades experimentales expuestas a otro tratamiento, las inferencias causales serán bastante sensibles a las especificaciones $h(Y|X_{(1)},\pi)$ y $p(\pi)$. 
+
+Como ejemplo, Weinstein (1974, pág. 7) en algunos casos parece recomendar la asignación de pacientes a operaciones basándose en sus preferencias y trata de justificar el procedimiento mediante un argumento bayesiano de la teoría de la decisión. Supongamos que la única variable $X$ registrada es $X_1 =$ preferencia del paciente por la operación 1 o la operación 2. Dado que todos los pacientes reciben la operación que prefirieron, las inferencias resultantes sobre los efectos causales de las operaciones son muy sensibles a las especificaciones a priori sobre las asociaciones entre la preferencia del paciente y $Y$ dada la operación no preferida. Es decir, para $X_{1i}=1$ solo podemos observar $Y^1$, y para $X_{1i}=2$ solo podemos observar $Y^2$, sin embargo, necesitamos estimar las distribuciones condicionales de $Y^1$ dado $X_1=2$ y de $Y^2$ dado $X_1=1$. Para un ejemplo específico con una $Y$ dicotómica, considérese el ejemplo de la Sección 4.2 con $\theta=0$, notando que $\theta=0$ implica que $X_{1i}$ es conocida; en muestras grandes, la distribución predictiva de $(\overline{Y}_1^1, \overline{Y}_1^2)$ converge entonces a $(\overline{y}^1/(2-\alpha^1), \overline{y}^2/\alpha^2)$ promediada sobre la distribución a priori de $(\alpha^1, \alpha^2)$ restringida a aquellos $(\alpha^1, \alpha^2)$ para los cuales $\alpha^1 \le 2-\overline{y}^1$ y $\alpha^2 \ge \overline{y}^2$. Aunque existen justificaciones no estadísticas para la asignación a tratamientos preferidos por el paciente, el estadístico bayesiano debe considerar el diseño inapropiado para estimar los efectos causales de las operaciones a menos que exista fuerte información a priori sobre las relaciones entre la preferencia del paciente por la operación y el resultado de cada operación. 
+
+Otros ejemplos obvios de mecanismos ignorables de asignación y registro que conducen a datos poco adecuados para la inferencia causal incluyen casos con $Y$ registrada solo para unidades experimentales expuestas al tratamiento 1, o asumiendo que el efecto causal promedio en $P$ es de interés, casos con $Y$ registrada solo para unidades experimentales con $X_1=1$. 
+
+\subsection{Mecanismos ignorables relativamente bien adecuados para la inferencia causal} 
+
+Las implicaciones de las Secciones 4.2 y 4.3 son bastante simples. Las inferencias para efectos causales serán relativamente insensibles a las especificaciones a priori cuando tanto los mecanismos de asignación como los de registro sean ignorables, y, para cada valor distinto de las covariables registradas, haya unidades experimentales con valores de $Y$ registrados dentro de cada condición de tratamiento.Una simple modificación de los ejemplos anteriores ilustra aún más este punto bastante obvio. 
+
+Supongamos que (a) $n$ unidades muestreadas son expuestas a uno de dos tratamientos, (b) $Y_1$ es dicotómica (0, 1) y ya sea $Y_1^1$ o $Y_1^2$ es registrada para cada unidad muestreada, (c) $X_1$ es dicotómica (1, 2) y registrada para cada unidad muestreada, (d) los mecanismos de asignación y registro son ignorables, y (e) la especificación para $(Y_1^1, Y_1^2, X_1)$ es la tabla de contingencia de $2 \times 2 \times 2$ dada en la Figura 2. 
+
+Sea $n_k^t = \sum_{i=1}^N \tilde{M}_{1i}^t \delta(\tilde{X}_{1i}-k)$ (el número de unidades expuestas al tratamiento $t$ con $\tilde{X}_{1i}=k$) y $\overline{y}_k^t = \sum_{i=1}^N \tilde{Y}_{1i}^t \tilde{M}_{1i}^t \delta(\tilde{X}_{1i}-k) / n_k^t$ (el valor promedio observado de $\tilde{Y}_{1i}^t$ cuando $\tilde{X}_{1i}=k$). La distribución a posteriori de $\pi$ es proporcional a: 
+
+\begin{equation}\label{eq:4.11}
+p(\pi) \prod_{t=1}^2 [\alpha^t \pi^t]^{n_1^t \overline{y}_1^t} [1-\alpha^t \pi^t]^{n_1^t(1-\overline{y}_1^t)} \times \prod_{t=1}^2 [\pi^t(2-\alpha^t)]^{n_2^t \overline{y}_2^t} [1-\pi^t(2-\alpha^t)]^{n_2^t(1-\overline{y}_2^t)} \tag{4.11}
+\end{equation} 
+
+Supongamos que para $\tilde{X}_{1i}=1$ y $\tilde{X}_{1i}=2$ hay unidades experimentales en ambas condiciones de tratamiento (es decir, $n_k^t > 0$, $t=1, 2$, $k=1, 2$). Entonces la verosimilitud en (4.11) tiene un único valor maximizador de $(\pi^1, \pi^2)$ dado por $((\overline{y}_1^1 + \overline{y}_2^1)/2, (\overline{y}_1^2 + \overline{y}_2^2)/2)$, y un único valor maximizador de $(\alpha^1, \alpha^2)$ dado por:
+
+\begin{equation*}
+\left( \frac{2\overline{y}_1^1}{\overline{y}_1^1+\overline{y}_2^1}, \frac{2\overline{y}_1^2}{\overline{y}_1^2+\overline{y}_2^2} \right)
+\end{equation*} 
+
+Por lo tanto, los datos son informativos sobre los efectos causales de los tratamientos en $P$ y las dos subpoblaciones de $P$ definidas por $X_{1i}=1$ y $X_{1i}=2$. En este sentido, las inferencias para efectos causales son relativamente insensibles a las especificaciones a priori. Si algún $n_k^t = 0$, entonces las inferencias para efectos causales serán bastante sensibles a las especificaciones a priori porque existirá una cresta en la verosimilitud en (4.11); por ejemplo, si $n_2^2 = 0$ entonces $\pi^1$ y $\alpha^1$ tienen valores maximizadores únicos como los dados anteriormente, pero existe una cresta de maximización de $(\alpha^2, \pi^2)$ definida por la ecuación $\alpha^2\pi^2 = \overline{y}_1^2$. 
+
+Consideramos estos ejemplos con una $Y$ dicotómica y una $X$ dicotómica representativos del caso práctico más general.  Esto se debe a que, en cualquier problema práctico, cualquier $Y$ puede tomar solo un número finito de valores posibles y cualquier $X$ puede tomar solo un número finito de valores posibles.  La modelización de las filas de $(Y, X)$ como multinomiales i.i.d. es por lo tanto completamente general, siendo modelos como una regresión lineal normal de $Y$ sobre $X$ vistos como restricciones en $p(\pi)$ que suavizan las probabilidades multinomiales condicionales de maneras especiales. Por lo tanto, permitiendo que $f(X,Y|\pi)$ sea la multinomial sin restricciones, vemos que dados mecanismos de asignación y registro ignorables, las inferencias para efectos causales en $P$ y en las subpoblaciones de $P$ definidas por cada valor observado de $X$ son relativamente insensibles a las especificaciones a priori solo si para cada valor observado de $X$ existen unidades experimentales con $Y$ registrada en cada condición de tratamiento. 
+
+% -------------------------------------------------------
+\section{El rol de la aleatorización}
+% -------------------------------------------------------
+
+Hubo cuatro mensajes principales en la Sección 4. Primero, cuando el mecanismo de asignación y/o registro es no ignorable, un análisis bayesiano válido requiere la incorporación de modelos para los mecanismos no ignorables, así como un modelo que relacione las variables observadas con las variables no observadas utilizadas en dichos mecanismos no ignorables.Segundo, la inferencia para efectos causales es generalmente muy sensible a las especificaciones a priori cuando los mecanismos de asignación y/o registro son no ignorables, incluso cuando no hay desequilibrio en la distribución de las covariables registradas entre los grupos de tratamiento.Tercero, la inferencia para efectos causales también puede ser muy sensible a las especificaciones a priori con combinaciones de mecanismos ignorables de asignación y registro que producen distribuciones desequilibradas de covariables registradas entre los grupos de tratamiento.Cuarto, las inferencias para efectos causales en $P$ y en subpoblaciones de $P$ definidas por valores observados de covariables pueden ser insensibles a las especificaciones a priori solo cuando para cada valor distinto de las covariables registradas hay unidades experimentales en cada condición de tratamiento. 
+
+Una justificación estándar para la aleatorización es que tiene un efecto profiláctico, protegiendo contra datos desequilibrados con respecto a covariables registradas. Una interpretación bayesiana de esta afirmación está dada por el resultado de que, aunque los diseños aleatorizados generalmente no son óptimos, satisfacen ciertas propiedades minimax sobre las elecciones de $p(\pi)f(X,Y|\pi)$ (véase Savage, 1972; Stone, 1973).Estos resultados, sin embargo, no implican que deban usarse diseños aleatorizados clásicos. De importancia crítica, no abordan la siguiente pregunta: dada una asignación de tratamiento particular $\tilde{W}$, ¿hay alguna ventaja en saber que la asignación se obtuvo mediante una regla aleatorizada en lugar de una regla determinista? 
+
+El marco que hemos desarrollado muestra, sin embargo, que los diseños aleatorizados clásicos pueden reducir notablemente la sensibilidad de un análisis bayesiano válido, porque solo un mecanismo de asignación aleatorizado puede ser ignorable y producir datos que tengan más de una condición de tratamiento representada para un valor distinto de covariables registradas.\footnote{Dos unidades experimentales con valores idénticos de $\tilde{X}_{(1)}$ parecen idénticas (excepto por sus índices asignados aleatoriamente) a un mecanismo de asignación ignorable porque los valores $Y$ de una unidad experimental no pueden registrarse hasta después de la asignación del tratamiento. Por lo tanto, si dos de estas unidades reciben tratamientos diferentes bajo un mecanismo de asignación ignorable, debe haberse empleado alguna aleatorización. \% [cite: 385, 386]} Además, argumentamos que en muchos problemas prácticos, los diseños aleatorizados clásicos pueden lograr esta sensibilidad reducida a las especificaciones a priori y aún equilibrar las covariables utilizadas para formar bloques casi tan bien como, y quizás mejor que, los diseños "óptimos". Demostraremos las ventajas de los diseños aleatorizados clásicos considerando primero los problemas de ejecución y análisis que enfrenta un estudio que utiliza un mecanismo de asignación no aleatorizado (determinista) para equilibrar la distribución de muchas covariables entre los grupos de tratamiento, y luego mostrando cómo estos problemas de ejecución y análisis pueden obviarse mediante un diseño aleatorizado comparable.
+
+\subsection{Equilibrando determinísticamente muchas covariables}
+
+En cualquier estudio, el mecanismo de asignación debe describirse explícitamente para restringir la clase de modelos $k(W|X,Y,\pi)$ que necesita ser considerada en el análisis de datos. Reglas como "se probaron un gran número de asignaciones y se eligió una que parecía exhibir la distribución más equilibrada de características relevantes entre los grupos de tratamiento" o "el estudio continuó hasta que se recolectó evidencia concluyente" corresponden a modelos para $k(W|X,Y,\pi)$ que dependen de $\pi$ y posiblemente de valores no observados de $(X,Y)$.Las reglas deterministas que intentan equilibrar muchas covariables pueden ser difíciles de formalizar, especialmente cuando las covariables que se equilibran se basan en evaluaciones personales sobre las unidades experimentales (por ejemplo, juicios médicos sobre la salud de los pacientes). El esfuerzo requerido para formalizar covariables y/o reglas deterministas que equilibran muchas covariables puede ser grande y retrasar la asignación de tratamientos. 
+
+Incluso si las reglas deterministas y las covariables que intentan equilibrar se formalizan con éxito, en la práctica las reglas pueden ser difíciles de seguir porque son intrincadas, o fáciles de evitar seguir porque una vez que se conocen los valores de las covariables, se conoce la asignación del tratamiento (por ejemplo, al cambiar el valor de una covariable, tal vez basándose en una evaluación personal, se puede cambiar la asignación del tratamiento; esto significa que variables que reflejan juicios sobre tratamientos preferidos también se están utilizando para asignar tratamientos).  Por lo tanto, puede ser difícil (y, si algunos valores utilizados para tomar decisiones de asignación no se registran, virtualmente imposible) verificar que las reglas de asignación propuestas se utilizaron realmente. Bailar (1976) señala puntos similares al discutir el uso poco frecuente de algoritmos intrincados de asignación de pacientes en la investigación médica.  La implicación práctica es que cuando el diseño experimental propone un mecanismo de asignación determinista, un modelo para $k(W|X,Y,\pi)$ que refleje el mecanismo de asignación realmente utilizado puede tener que ser más complicado que el mecanismo propuesto. Por lo tanto, incluso si se propone un diseño determinista "óptimo", el mecanismo de asignación real utilizado puede no ser ni óptimo ni ignorable. 
+
+Además, el uso de un mecanismo de asignación determinista para equilibrar muchas covariables puede conducir a una posibilidad no despreciable de valores faltantes no intencionales debido a la contabilidad requerida para registrar los valores de dichas covariables.En consecuencia, para reflejar el mecanismo de registro realmente utilizado en este caso, es posible que deba considerarse en el análisis de datos un modelo no ignorable complicado para $g(M|X,Y,W,\pi)$ (recuerde que incluso si no existen valores faltantes no intencionales, la posibilidad de que pudiera haber habido valores faltantes hace que el mecanismo de registro sea no ignorable).
+
+A pesar de la posibilidad real de mecanismos de asignación y/o registro no ignorables al intentar usar un mecanismo de asignación determinista para equilibrar muchas covariables, supongamos que el experimentador ha utilizado con éxito mecanismos ignorables de asignación y registro. Ahora puede resultar difícil realizar un análisis bayesiano válido porque el conjunto de datos observados es muy multivariado. Incluso si el parámetro $\pi_{Y|X}$ es independiente a priori del parámetro $\pi_X$, el análisis de datos aún debe especificar un modelo $h(Y|X_{(1)},\pi_{Y|X})$ y una distribución a priori para $\pi_{Y|X}$. Con muchas variables $X$ registradas, la sensibilidad de las inferencias causales a una amplia clase de modelos para $h(Y|X_{(1)},\pi_{Y|X})$ es tan grande que un análisis bayesiano capaz de arrojar inferencias causales precisas requiere fuertes restricciones a priori sobre estos modelos; con una $Y$ continua, simplemente considere modelos de regresión polinómica de orden $N$ con muchas covariables (variables independientes). Por lo tanto, si un análisis bayesiano válido ha de producir inferencias causales valiosas, el estadístico debe dedicar el esfuerzo a formalizar restricciones a priori "razonables" sobre la especificación para la distribución de los datos.
+
+A medida que se registran más y más covariables, incluso un análisis bayesiano aproximadamente válido se vuelve prácticamente imposible, ya que se necesita un enorme compromiso de tiempo y recursos para realizar la contemplación mental, los análisis matemáticos y/o de Monte Carlo, y los cálculos numéricos necesarios para comprender un conjunto de datos altamente multivariado.  Los resultados de tales esfuerzos pueden ser de interés para las covariables que se registran porque sus relaciones con $Y$ son de importancia científica o práctica central, pero de dudoso interés para las covariables que se registran principalmente porque se usaron para equilibrar los grupos de tratamiento. 
+
+Por supuesto, uno podría decidir evitar un conjunto de datos altamente multivariado en este caso al no registrar los valores de algunas covariables que se usaron para asignar tratamientos. Sin embargo, entonces el mecanismo de asignación no es ignorable y el análisis de datos debe incorporar explícitamente el modelo $k(W|X,Y,\pi)$ así como modelar la distribución conjunta de $Y$ y las covariables utilizadas para asignar tratamientos. Un bayesiano no puede simplemente afirmar que la incorporación de estos modelos no afectará las inferencias causales y tener un análisis bayesiano válido. La Sección 4.2 mostró que un análisis bayesiano válido con un mecanismo de asignación que no es ignorable puede ser muy sensible a la especificación $f(X,Y|\pi)p(\pi)$ incluso sin desequilibrio en las covariables registradas. Las inferencias para efectos causales pueden ser especialmente sensibles si los modelos para $k(W|X,Y,\pi)$ y $g(M|X,Y,W,\pi)$ reflejan mecanismos que podrían estar operando realmente cuando se propone un mecanismo de asignación determinista complicado. 
+
+En resumen, argumentamos que equilibrar determinísticamente muchas covariables en la práctica conduce generalmente a un estudio que es difícil de ejecutar adecuadamente y difícil de analizar.
+
+\subsection{El uso de bloques y aleatorización para equilibrar muchas covariables}
+
+Los diseños aleatorizados clásicos utilizan el bloqueo y la aleatorización para equilibrar la distribución de covariables que se usaron para el bloqueo pero no necesariamente se registraron para el análisis de datos. Estos diseños ofrecen, por tanto, alternativas al equilibrio determinista y no aleatorizado de las distribuciones de estas covariables y a la subsiguiente necesidad de modelar su distribución conjunta con las variables $Y$, y ya sea (a) registrar sus valores para el análisis de datos, o (b) incorporar explícitamente modelos para los mecanismos de asignación y registro.
+
+Las ventajas de los diseños aleatorizados son más dramáticas cuando hay muchas covariables por equilibrar, incluyendo muchas basadas en evaluaciones personales.\footnote{Esta parece ser la recomendación en los "diseños de moneda sesgada" (Efron, 1971) con el "tiempo de entrada al experimento" y el "bloque" utilizados para asignar tratamientos, pero sin registrar el primero para el análisis de datos. 
+
+Específicamente, supongamos que al principio del estudio se asignaron índices aleatoriamente a las unidades experimentales;  luego el experimentador bloqueó las unidades experimentales de tal manera que, sobre la base de todas las covariables que quería controlar, las unidades experimentales dentro de cada bloque le parecían similares; una aleatorización final asignó tratamientos a las unidades experimentales dentro de los bloques (por ejemplo, para $T=2$ y 12 unidades experimentales en un bloque, las 6 unidades experimentales con los índices más bajos recibieron el tratamiento $t$, siendo $t=1$ o 2 decidido por el lanzamiento de una moneda). 
+
+Dado que la regla de asignación es simple, debería ser fácil de seguir. Además, es difícil evitar seguirla porque dentro de cada bloque, la decisión sobre qué unidades experimentales recibirán cada tratamiento no se toma hasta el lanzamiento final de la moneda, de modo que ni el bloqueo ni la asignación inicial de índices (ni ambos) pueden usarse para determinar la asignación de tratamientos. La asignación aleatoria inicial de índices protegió contra la posibilidad de que el experimentador agrupara unidades experimentales dentro de un bloque y asignara tratamientos "preferidos" a los grupos basándose en algunas variables no registradas; dado que las unidades experimentales con índices altos y bajos están agrupadas aleatoriamente, hay poco que ganar evitando el lanzamiento de la moneda. 
+
+Para verificar que la regla de asignación se está siguiendo, uno solo necesita verificar que los índices fueron de hecho asignados aleatoriamente y que la asignación final de tratamientos también fue aleatoria. Aunque el experimentador puede "hacer trampa", las posibilidades son mucho menores que cuando se usa una regla determinista donde se sabe que un cambio específico en el valor de una covariable corresponde a un cambio específico en la asignación del tratamiento. Por lo tanto, al usar el diseño aleatorizado, es más probable que se esté siguiendo la regla de asignación propuesta y, en consecuencia, es más probable que no sea necesario considerar modelos complicados para $k(W|X,Y,\pi)$.
+
+Dado que la asignación se basa en la covariable $X_1 =$ número de bloque, el mecanismo de registro no necesita registrar ningún valor $X$ aparte de $X_1$ para que el mecanismo de asignación sea ignorable, y por lo tanto las covariables utilizadas para el bloqueo no tienen que ser formalizadas. Dado que el mecanismo de registro necesita registrar solo $Y$ y $X_1$, este también puede ser ignorable más fácilmente que si se utilizara una complicada regla de asignación determinista. Además, en el análisis de datos, $f(X,Y|\pi)p(\pi)$ solo necesita especificar un modelo aceptable para el experimento de bloques aleatorizados sin covariables registradas (por ejemplo, un modelo de análisis de varianza). 
+
+Dado que dentro de cada bloque tenemos un experimento completamente aleatorizado, las filas de $Y$ en un bloque son intercambiables y, por lo tanto, pueden ser modeladas como i.i.d. dado $\pi$. Aunque las inferencias para efectos causales variarán un poco con las especificaciones a priori sobre las distribuciones de $Y$ dado cada bloque, un análisis bayesiano válido es mucho más directo e insensible a las especificaciones a priori que si se registraran muchas covariables y no se pudiera invocar esta extensa intercambiabilidad dadas las covariables registradas. 
+
+Si algunas variables $X$ son especialmente importantes a priori (en el sentido de que es probable una relación clara con $Y$), deben ser registradas y modeladas (por ejemplo, un modelo de análisis de covarianza), o deben usarse muchos bloques para representar sus valores. Si algunas variables $X$ importantes pueden usarse para tomar decisiones de asignación futuras, deben ser registradas para que se puedan estimar diferentes efectos de tratamiento para las subpoblaciones definidas por sus valores. Por ejemplo, la efectividad relativa de tratamientos médicos puede ser diferente para distintos grupos de edad, y la edad generalmente se puede medir antes de tomar una decisión de tratamiento. Idealmente, en cada subpoblación definida por los valores de estas variables $X$, debería haber un experimento aleatorizado clásico.  Por supuesto, para un tamaño de muestra total fijo, aumentar el número de subpoblaciones incrementa la sensibilidad del análisis bayesiano para efectos causales a las especificaciones a priori, ya que se reduce la intercambiabilidad.  En consecuencia, si muchas subpoblaciones son de interés, podemos enfrentarnos a inferencias para los efectos causales en cada subpoblación que son bastante sensibles a las especificaciones a priori. 
+
+No estamos afirmando que los diseños aleatorizados clásicos hagan trivial la inferencia bayesiana para efectos causales, sino más bien que la hacen simple en relación con la inferencia bayesiana para efectos causales utilizando datos obtenidos mediante una regla determinista comparable que equilibra muchas covariables.
+
+La objeción de que el diseño aleatorizado, aunque produce grupos de tratamiento equilibrados con respecto a las covariables utilizadas para formar bloques, no ha equilibrado "óptimamente" estas covariables bajo ningún modelo específico, parece irrelevante en problemas del mundo real que no tienen un modelo específico aceptado que relacione $Y$ con $X$. Esta visión concuerda con la experiencia práctica de algunos experimentadores que sugiere que la ganancia de usar un diseño "óptimo" en lugar de un buen diseño aleatorizado clásico es usualmente trivial.\footnote{W. G. Cochran, en comunicaciones personales, ha sugerido que en su experiencia, los experimentadores a menudo sienten que muchas covariables son importantes y deben controlarse explícitamente, pero el análisis de datos los sorprende al mostrar que la relación de muchas de estas covariables con $Y$ es en realidad bastante débil.  D. R. Cox, en una comunicación personal relacionada con trabajo no publicado que compara diseños óptimos y diseños aleatorizados en algunos estudios agrícolas, concluye que en la práctica cualquier ventaja de los diseños óptimos parece ser muy pequeña. 
+
+Además, hemos argumentado que incluso si se propone un diseño determinista óptimo, en muchos problemas prácticos es poco probable que se siga. En resumen, al usar el diseño aleatorizado, la regla de asignación es fácil de seguir y difícil de evitar, el mecanismo de registro puede ser bastante simple, un análisis bayesiano válido para efectos causales es relativamente directo, y los grupos de tratamiento están equilibrados con respecto a las covariables usadas para formar bloques casi tan bien como si el experimentador encontrara la única asignación más satisfactoria para él, y sin embargo no hubo necesidad de formalizar y registrar los valores de estas covariables. Un diseño no aleatorizado comparable sería generalmente sustancialmente más difícil de ejecutar y analizar debido a la necesidad de lidiar explícitamente con todas las covariables que se están equilibrando. 
+
+\subsection{Muestreo determinista de unidades experimentales en experimentos aleatorizados}
+
+En la práctica, la mayoría de los estudios aleatorizados utilizan un muestreo determinista de las unidades experimentales, ya que la población real de interés, $P$, generalmente consiste en unidades experimentales de diferentes áreas geográficas y del futuro (siendo el objetivo de la mayoría de los estudios determinar la eficacia potencial de tratamientos ampliamente aplicables, como las operaciones médicas). 
+
+Supongamos que, mediante una definición adecuada de las covariables utilizadas para seleccionar unidades experimentales para el estudio, todas las unidades experimentales seleccionadas tienen los mismos valores de esas covariables. Si centramos la atención en las unidades experimentales muestreadas para el estudio, considerando que constituyen la población de interés, un análisis bayesiano válido para los efectos causales de los tratamientos es directo, ya que las covariables utilizadas para determinar la participación en el estudio son constantes en esta subpoblación y, por lo tanto, no necesitan registrarse para el análisis de datos. 
+
+Cuando el interés se centra en $P$, la población real de interés, las covariables utilizadas para determinar la participación en el estudio deben registrarse para el análisis de datos si se quiere que el mecanismo de asignación sea ignorable. En algunos casos, como cuando se muestrea del presente pero se generaliza al futuro cercano, puede ser razonable creer que la covariable utilizada para la selección (el tiempo) no está relacionada con las variables registradas y, por lo tanto, modelar las unidades muestreadas como una muestra aleatoria simple de $P$. En otros casos, como cuando se utilizan prisioneros para experimentos médicos, puede no ser razonable creer que las covariables utilizadas para seleccionar las unidades experimentales no estén relacionadas con las variables registradas.
+
+En cualquier caso, el experimento aleatorizado clásico sobre las unidades experimentales muestreadas ha conducido a un análisis bayesiano directo y válido de los efectos causales para estas unidades experimentales.  En muchos estudios observacionales, las unidades experimentales muestreadas pueden ser más parecidas a una muestra aleatoria de $P$ que en muchos experimentos controlados; sin embargo, la regla para asignar tratamientos es desconocida. Por lo tanto, en estos estudios observacionales es generalmente difícil estimar los efectos causales para cualquier colección de unidades experimentales, de modo que la capacidad de generalizar los resultados a la población prevista puede ser de utilidad práctica limitada. 
+
+\subsection{Conclusiones y extensiones}
+
+En algunos casos con fuerte conocimiento previo, la aleatorización puede no ser importante.  Por ejemplo, en un experimento industrial que compara procedimientos de fabricación, las covariables relevantes pueden registrarse fácilmente y sus relaciones con las variables dependientes pueden comprenderse bien; por lo tanto, un diseño que sea óptimo bajo especificaciones a priori restrictivas para los datos puede ser apropiado. En otros casos, como al operar un equipo familiar (por ejemplo, conducir un automóvil), los efectos causales de los tratamientos (girar el volante a la izquierda frente a la derecha) pueden ser tan dominantes que cualquier diseño formal puede resultar superfluo. 
+
+Sin embargo, cuando los efectos causales de los tratamientos son lo suficientemente sutiles como para requerir la atención de un estadístico para el diseño y/o análisis del estudio, algunas covariables relevantes serán difíciles de registrar y sus relaciones con las variables dependientes se comprenderán pobremente. En tales casos, que abundan en la investigación social y de la salud, los diseños aleatorizados clásicos deben considerarse herramientas vitales para el estadístico bayesiano, ya que pueden reducir dramáticamente la sensibilidad de los análisis bayesianos válidos a las especificaciones a priori y simplificar enormemente el cálculo de dichos análisis. 
+
+Sin embargo, es posible en la era de la computadora que otros diseños también sean de interés. Por ejemplo, considérense los "diseños de moneda sesgada" (Efron, 1971) y los "modelos de selección finita" (Morris, 1975).Estos son aleatorizados (e "insesgados" en algún sentido) pero utilizan covariables para asignar tratamientos sin requerir que estas covariables se registren para el análisis de datos. Por lo tanto, corresponden a mecanismos de asignación aleatorizados no ignorables.  Supóngase que el mecanismo de registro es ignorable; entonces las ecuaciones (4.1)-(4.4) implican que la distribución predictiva de $Y_{(0)}$ es proporcional a 
+
+\begin{equation}\label{eq:5.1}
+\left[ \int h(\tilde{Y}|\tilde{X}_{(1)},\pi)q(\pi|\tilde{X}_{(1)})d\pi \right] S(Y_{(0)}) \tag{5.1}
+\end{equation} 
+
+\noindent donde
+\begin{equation*}
+S(Y_{(0)}) = \frac{\iint k(\tilde{W}|\tilde{X},\tilde{Y},\pi)f(\tilde{X},\tilde{Y}|\pi)p(\pi)d\pi~dX_{(0)}}{\iint f(\tilde{X},\tilde{Y}|\pi)p(\pi)d\pi~dX_{(0)}}
+\end{equation*} 
+
+Nótese que $S(Y_{(0)})$ es la esperanza de $k(\tilde{W}|\tilde{X},\tilde{Y},\pi)$ sobre la distribución condicional de $(\pi, X_{(0)})$ dado $(\tilde{X}_{(1)}, \tilde{Y}_{(1)}, Y_{(0)})$ determinada por la especificación a priori $f(X,Y|\pi)p(\pi)$. Para una $f(X,Y|\pi)p(\pi)$ particular, una condición necesaria y suficiente para que las inferencias sobre los efectos causales sean las mismas que si se ignorara el mecanismo de asignación es que $S(Y_{(0)})$ tome el mismo valor para todos los $Y_{(0)}$. Por lo tanto, si $S(Y_{(0)})$ es funcionalmente independiente de $Y_{(0)}$ podemos decir que el mecanismo de asignación es ignorable dada esa especificación a priori particular de los datos.
+
+En el diseño de moneda sesgada y el modelo de selección finita, 
+\begin{equation}\label{eq:5.2}
+k(\tilde{W}|\tilde{X},\tilde{Y},\pi) = k(\tilde{W}|\tilde{X}_{(1)},X_{(0)}). \tag{5.2}
+\end{equation} 
+
+Por consiguiente, si se asume que $Y$ y las variables $X$ no registradas utilizadas para asignar tratamientos son independientes dado $\tilde{X}_{(1)}$, entonces $S(Y_{(0)})$ toma el mismo valor para todos los $Y_{(0)}$ y el mecanismo de asignación (5.2) es ignorable dada esa especificación a priori. Además, para estos mecanismos de asignación, $S(Y_{(0)})$ puede ser casi funcionalmente independiente de $Y_{(0)}$ para una amplia gama de especificaciones a priori. Como ejemplo, considérese el diseño de moneda sesgada donde $X_{(1)}$ representa bloques y $X_{(0)}$ representa "tiempo de asignación del tratamiento". Para un $(\tilde{X}_{(1)}, \tilde{Y}_{(1)}, \tilde{W})$ fijo y cualquier distribución fija de $X_{(0)}$, a medida que el sesgo de la moneda se vuelve más pequeño, la distribución de los valores de $k(\tilde{W}|\tilde{X}_{(1)},X_{(0)})$ generada por la distribución de $X_{(0)}$ se concentra más alrededor de algún valor fijo (por ejemplo, $(1/2)^n$ para el diseño de moneda sesgada sin bloques y $n$ unidades experimentales que han recibido tratamientos). Así, $S(Y_{(0)})$ se vuelve "casi" independiente de $Y_{(0)}$ a medida que la moneda se vuelve justa.
+
+En consecuencia, existen diseños aleatorizados no clásicos que pueden ser "casi ignorables" en el sentido de que en la práctica podríamos ser capaces de aproximarlos como ignorables.\footnote{Las secciones 5 y 6 de Efron (1971) proporcionan justificaciones para la recomendación de ignorar la covariable "tiempo de asignación del tratamiento" en algunos diseños de moneda sesgada; \% [cite: 493] la recomendación general fue criticada implícitamente aquí en la nota al pie 6. Estos tipos de argumentos sugieren que pueden ser de interés definiciones más débiles de "casi ignorable". Por ejemplo, en algunos casos podríamos ser capaces de mostrar que bajo restricciones a priori suaves la distribución predictiva de alguna función particular de $Y_{(0)}$ (por ejemplo, $\overline{Y}^1-\overline{Y}^2$) es igual o casi igual a la distribución predictiva de esa función ignorando el mecanismo de asignación (es decir, ignorando el factor $S(Y_{(0)})$ en la ecuación (5.1)); \% [cite: 494, 516] o tal vez podamos mostrar que esta igualdad se mantiene en muestras grandes; \% [cite: 517] o más débil aún, podríamos ser capaces de mostrar que las medias de las distribuciones predictivas son iguales o casi iguales. \% [cite: 518].} Por supuesto, antes de hacer tales aproximaciones, deberíamos estar convencidos de que $S(Y_{(0)})$ realmente es casi independiente de $Y_{(0)}$ para toda la gama de especificaciones de datos razonables. Esta comprobación puede ser posible en muchos casos utilizando una computadora o puede ser posible de hacer analíticamente.
+
+Si el mecanismo de asignación no es ignorable o casi ignorable, entonces se deben usar modelos que incorporen el mecanismo de asignación. Los estudios observacionales son especialmente difíciles de analizar correctamente porque la forma del mecanismo de asignación es en sí misma desconocida. Es necesario desarrollar modelos apropiados para estudios observacionales prospectivos y retrospectivos. En muchos estudios observacionales, no serán posibles inferencias precisas sobre los efectos causales, mientras que en otros, modelos razonables para mecanismos de asignación no ignorables pueden llevar a conclusiones consistentes. Claramente, análisis como estos requieren más cálculo y demandan más atención que los análisis de datos comparables obtenidos por mecanismos ignorables; un ejemplo en el contexto más simple pero relacionado de la falta de respuesta en encuestas por muestreo se da en Rubin (1977b).
+
+Otras extensiones de este trabajo incluyen la aplicación a datos donde las definiciones no estándar de los efectos del tratamiento pueden ser útiles, por ejemplo, datos típicamente analizados utilizando modelos de riesgos competitivos. Dado que, dentro de nuestro marco, los efectos causales se definen sin referencia a la estructura paramétrica de modelos particulares, es conceptualmente sencillo evaluar la sensibilidad de las inferencias para efectos causales a las especificaciones a priori (por ejemplo, la no independencia de los riesgos competitivos), incluso si la estructura paramétrica de las especificaciones cambia.
+
+En conclusión, creemos que nuestro marco no solo proporciona una justificación teórica para los métodos clásicos de estimación de efectos causales, sino que también sugiere nuevos enfoques para extraer inferencias sobre efectos causales en problemas no estándar. 
+
+\section*{Agradecimientos}
+Deseo agradecer a P. W. Holland, C. Morris y M. R. Novick por sus numerosos comentarios útiles sobre los borradores iniciales de este trabajo. También quiero agradecer a A. P. Dempster por sus numerosas, estimulantes e influyentes conversaciones que han mejorado enormemente la presentación de las ideas en este artículo.
+
+% -------------------------------------------------------
+\begin{thebibliography}{99}
+% -------------------------------------------------------
+
+\bibitem{Bailar1976}
+BAILAR, J. C. (1976). Patient assignment algorithms---an overview. \textit{Proc. 9th International Biometric Conf.} \textbf{1} 189--206. The Biometric Society, Raleigh. 
+
+\bibitem{Blackwell1957}
+BLACKWELL, D. y HODGES, J. L. (1957). Design for the control of selection bias. \textit{Ann. Math. Statist.} \textbf{28} 449--460. 
+
+\bibitem{Campbell1970}
+CAMPBELL, D. T. y ERLEBACHER, A. (1970). How regression artifacts in quasi-experimental evaluations can mistakenly make compensatory education look harmful. En \textit{The Disadvantaged Child, Compensatory Education: A National Debate}, \textbf{3} (J. Hellmuth, ed.). Brunner/Mazel, Nueva York.
+
+\bibitem{Cochran1974}
+COCHRAN, W. G. y RUBIN, D. B. (1974). Controlling bias in observational studies: a review. \textit{Sankhy\bar{a} A} \textbf{35} 417--446.  
+\bibitem{Cox1958}
+COX, D. R. (1958). \textit{Planning of Experiments}. Wiley, Nueva York. 
+
+\bibitem{DeFinetti1963}
+DE FINETTI, B. (1963). Foresight: its logical laws, its subjective sources. \textit{Studies in Subjective Probability} (H. E. Kyburg y H. E. Smokler, eds.). Wiley, Nueva York. 
+
+\bibitem{Diaconis1976}
+DIACONIS, P. (1976). Finite forms of de Finetti's theorem on exchangeability. \textit{Technical Report No. 84}, Stanford Univ. 
+
+\bibitem{Efron1971}
+EFRON, B. (1971). Forcing a sequential experiment to be balanced. \textit{Biometrika} \textbf{58} 3, 403--417.
+
+\bibitem{Feller1966}
+FELLER, W. (1966). \textit{An Introduction to Probability Theory and Its Applications, Volume II}. Wiley, Nueva York. 
+
+\bibitem{Gilbert1974}
+GILBERT, J. P. (1974). Randomization of human subjects. \textit{New England Journal of Medicine}, \textbf{291} 24, 1305--1306. %
+\bibitem{Gilbert1975}
+GILBERT, J. P., LIGHT, R. J. y MOSTELLER, F. (1975). Assessing social innovations: an empirical base for policy. \textit{Evaluation and Experiment: Some Critical Issues in Assessing Social Programs} (A. R. Lumsdaine y C. A. Bennett, eds.). Academic Press, Nueva York. 
+
+\bibitem{Hewitt1955}
+HEWITT, E. y SAVAGE, L. J. (1955). Symmetric measures on Cartesian products. \textit{Trans. Amer. Math. Soc.} \textbf{80} 470--501. 
+
+\bibitem{Morris1975}
+MORRIS, C. (1975). A finite selection model for experimental design of the health insurance study. \textit{Proc. Social Statist. Sect., Amer. Statist. Assoc.} 78--85.
+
+\bibitem{Rosenthal1976}
+ROSENTHAL, R. L. (1976). \textit{Experimenter Effects in Behavioral Research}. Irvington, Nueva York. 
+
+\bibitem{Rubin1974}
+RUBIN, D. B. (1974). Estimating causal effects of treatments in randomized and nonrandomized studies. \textit{J. Educational Psychology} \textbf{66} 5, 688--701. 
+
+\bibitem{Rubin1976}
+RUBIN, D. B. (1976). Inference and missing data. \textit{Biometrika} \textbf{63} 3, 581--592.
+
+\bibitem{Rubin1977a}
+RUBIN, D. B. (1977a). Assignment to treatment group on the basis of a covariate. \textit{J. Educational Statist.} \textbf{2} 1, 1--26. 
+
+\bibitem{Rubin1977b}
+RUBIN, D. B. (1977b). Formalizing subjective notions about the effect of non-response in sample surveys. \textit{J. Amer. Statist. Assoc.} \textbf{72} 359, 538--543. 
+
+\bibitem{Savage1962}
+SAVAGE, L. J. (1962). \textit{The Foundations of Statistical Inference} (M. S. Bartlett, ed.). 33--34. Wiley, Nueva York. 
+
+\bibitem{Savage1972}
+SAVAGE, L. J. (1972). \textit{The Foundations of Statistics}. Dover, Nueva York. 
+
+\bibitem{Stigler1969}
+STIGLER, S. (1969). The use of random allocation for the control of selection bias. \textit{Biometrika} \textbf{56} 3, 553--560. 
+
+\bibitem{Stone1973}
+STONE, M. (1973). Role of experimental randomization in Bayesian statistics: An asymptotic theory for a single Bayesian. \textit{Metrika} \textbf{20} 170--176. 
+
+\bibitem{Weinstein1974}
+WEINSTEIN, M. C. (1974). Allocation of subjects in medical experiments. \textit{New England Journal of Medicine} \textbf{291} 1278--1285. 
+\end{thebibliography}
+
+\end{document}
