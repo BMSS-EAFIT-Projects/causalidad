@@ -1,0 +1,474 @@
+---
+title: "Replicación LaLonde — An Introduction to Causal Inference (Taddeo, 2025)"
+subtitle: "Manual (slide) vs paquete `causality`"
+output:
+  html_notebook:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    theme: flatly
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = TRUE, warning = FALSE)
+```
+
+```{r librerias}
+library(causality)
+library(ggplot2)
+```
+
+---
+
+# Slides 4–6: Datos randomizados — `Matching`
+
+> El slide usa `data(lalonde, package = "Matching")`.  
+> Columnas: `age educ black hisp married nodegr re74 re75 re78 u74 u75 treat`
+
+```{r datos_rand}
+# Slide 4
+data(lalonde, package = "Matching")
+head(lalonde)
+```
+
+## Slide 5: Estimación 1 — Diferencia de medias
+
+```{r naive_rand}
+# Manual (slide)
+ate_manual <- mean(lalonde$re78[lalonde$treat == 1]) -
+              mean(lalonde$re78[lalonde$treat == 0])
+cat(sprintf("Manual:     [1] %.3f\n", ate_manual))
+cat("Referencia: [1] 1794.343\n\n")
+
+# IC 95%
+n1 <- sum(lalonde$treat == 1)
+n0 <- sum(lalonde$treat == 0)
+se <- sqrt(var(lalonde$re78[lalonde$treat == 1]) / n1 +
+           var(lalonde$re78[lalonde$treat == 0]) / n0)
+cat(sprintf("IC 95%% manual:     [%.2f; %.2f]\n",
+            ate_manual - 1.96 * se, ate_manual + 1.96 * se))
+cat("IC 95%% referencia: [474.01; 3114.68]\n")
+```
+
+## Slide 5: Estimación 2 — Regresión condicional completa
+
+```{r reg_completa_rand}
+# Manual (slide): lm(re78 ~ ., data=lalonde)
+lalonde_fit <- lm(re78 ~ ., data = lalonde)
+coef_manual <- round(summary(lalonde_fit)$coef["treat", ], 3)
+cat("Manual (lm re78 ~ .):\n")
+print(coef_manual)
+cat("Referencia: Estimate=1670.709  SE=641.132  t=2.606  p=0.009\n")
+```
+
+## Slide 5: Regresión parcial (treat + age)
+
+```{r reg_parcial_rand}
+# Manual (slide): lm(re78 ~ treat + age, data=lalonde)
+lalonde_fit2 <- lm(re78 ~ treat + age, data = lalonde)
+coef_parcial <- round(summary(lalonde_fit2)$coef["treat", ], 3)
+cat("Manual (lm re78 ~ treat + age):\n")
+print(coef_parcial)
+cat("Referencia: Estimate=1758.575  SE=633.647  t=2.775  p=0.006\n")
+```
+
+## Slide 5: `causality::calcular_ate()` — datos RCT
+
+```{r causality_rand}
+# El slide usa todas las columnas en lm(re78 ~ .) incluyendo u74 y u75
+covs_rand <- c("age", "educ", "black", "hisp", "married",
+               "nodegr", "re74", "re75", "u74", "u75")
+
+df_rand  <- propensity_score(lalonde,
+                             tratamiento = "treat",
+                             covariables = covs_rand)
+
+res_rand <- calcular_ate(df_rand,
+                         resultado   = "re78",
+                         tratamiento = "treat",
+                         covariables = covs_rand)
+
+cat("\n")
+cat(sprintf("%-14s %10s  %10s\n", "Estimador", "causality", "Referencia"))
+cat(paste(rep("-", 40), collapse = ""), "\n")
+cat(sprintf("%-14s %10.3f  %10s\n", "naive",     res_rand$naive,     "1794.343"))
+cat(sprintf("%-14s %10.3f  %10s\n", "regresion", res_rand$regresion, "1670.709"))
+cat(sprintf("%-14s %10.3f  %10s\n", "g_formula", res_rand$g_formula, "—"))
+cat(sprintf("%-14s %10.3f  %10s\n", "ht",        res_rand$ht,        "—"))
+cat(sprintf("%-14s %10.3f  %10s\n", "hajek",     res_rand$hajek,     "—"))
+cat(sprintf("%-14s %10.3f  %10s\n", "msm",       res_rand$msm,       "—"))
+cat(sprintf("%-14s %10.3f  %10s\n", "dr",        res_rand$dr,        "—"))
+cat("\nEn RCT todos los estimadores deben converger ~1794.\n")
+```
+
+## Slide 6: Balance de covariables (RCT)
+
+```{r balance_rand}
+# El slide incluye re78 en el balance — aquí la excluimos porque es el outcome
+tabla_rand <- visualizar_balance(df_rand, "treat", covs_rand,
+                                 mostrar_graficos = FALSE)
+print(tabla_rand)
+cat("\nReferencia slide 6: p > 0.05 en casi todas => muestra balanceada.\n")
+```
+
+---
+
+# Slides 7–9: Datos observacionales — `designmatch`
+
+> El slide usa `data(lalonde, package = "designmatch")`.  
+> Columnas: `treatment age education black hispanic married nodegree re74 re75 re78`  
+> Requiere: `install.packages("designmatch")`
+
+```{r datos_obs}
+# Slide 7
+data(lalonde, package = "designmatch")
+
+# Slide 7: crear u74 y u75 como hace el slide
+lalonde$u74 <- as.numeric(lalonde$re74 == 0)
+lalonde$u75 <- as.numeric(lalonde$re75 == 0)
+
+cat(sprintf("dim: %d x %d\n", nrow(lalonde), ncol(lalonde)))
+cat("names:", paste(names(lalonde), collapse = ", "), "\n\n")
+head(lalonde)
+```
+
+## Slide 8: Balance de covariables (observacional)
+
+```{r balance_obs}
+# Slide 8 usa estas vars (sin re78 que es el outcome)
+covs_obs <- c("age", "education", "black", "hispanic",
+              "married", "nodegree", "re74", "re75", "u74", "u75")
+
+tabla_obs <- visualizar_balance(lalonde, "treatment", covs_obs,
+                                mostrar_graficos = FALSE)
+print(tabla_obs)
+cat("\nReferencia slide 8: multiples p < 0.05 => muestra NO balanceada.\n")
+```
+
+## Slide 9: Estimación 1 — Diferencia de medias (sesgada)
+
+```{r naive_obs}
+# Manual (slide)
+ate_naive_obs <- mean(lalonde$re78[lalonde$treatment == 1]) -
+                 mean(lalonde$re78[lalonde$treatment == 0])
+cat(sprintf("Manual:     [1] %.4f\n", ate_naive_obs))
+cat("Referencia: [1] -635.0262\n\n")
+
+n1 <- sum(lalonde$treatment == 1)
+n0 <- sum(lalonde$treatment == 0)
+se <- sqrt(var(lalonde$re78[lalonde$treatment == 1]) / n1 +
+           var(lalonde$re78[lalonde$treatment == 0]) / n0)
+cat(sprintf("IC 95%% manual:     [%.2f; %.2f]\n",
+            ate_naive_obs - 1.96 * se, ate_naive_obs + 1.96 * se))
+cat("IC 95%% referencia: [-1967.24; 697.19]\n")
+```
+
+## Slide 9: Estimación 2 — Regresión condicional completa
+
+```{r reg_completa_obs}
+# Manual (slide): lm(re78 ~ ., data=lalonde)
+lalonde_fit_obs <- lm(re78 ~ ., data = lalonde)
+coef_obs <- round(summary(lalonde_fit_obs)$coef["treatment", ], 3)
+cat("Manual (lm re78 ~ .):\n")
+print(coef_obs)
+cat("Referencia: Estimate=865.586  SE=800.010  t=1.082  p=0.280\n")
+```
+
+## Slide 9: Regresión parcial (treatment + age)
+
+```{r reg_parcial_obs}
+# Manual (slide): lm(re78 ~ treatment + age, data=lalonde)
+lalonde_fit2_obs <- lm(re78 ~ treatment + age, data = lalonde)
+coef_parcial_obs <- round(summary(lalonde_fit2_obs)$coef["treatment", ], 3)
+cat("Manual (lm re78 ~ treatment + age):\n")
+print(coef_parcial_obs)
+cat("Referencia: Estimate=-462.060  SE=657.677  t=-0.703  p=0.483\n")
+```
+
+## Slide 9: `causality::calcular_ate()` — datos observacionales
+
+```{r causality_obs}
+df_obs  <- propensity_score(lalonde,
+                            tratamiento = "treatment",
+                            covariables = covs_obs)
+
+res_obs <- calcular_ate(df_obs,
+                        resultado   = "re78",
+                        tratamiento = "treatment",
+                        covariables = covs_obs)
+
+cat("\n")
+cat(sprintf("%-14s %10s  %10s\n", "Estimador", "causality", "Referencia"))
+cat(paste(rep("-", 40), collapse = ""), "\n")
+cat(sprintf("%-14s %10.3f  %10s\n", "naive",     res_obs$naive,     "-635.026"))
+cat(sprintf("%-14s %10.3f  %10s\n", "regresion", res_obs$regresion, "865.586"))
+cat(sprintf("%-14s %10.3f  %10s\n", "g_formula", res_obs$g_formula, "—"))
+cat(sprintf("%-14s %10.3f  %10s\n", "ht",        res_obs$ht,        "—"))
+cat(sprintf("%-14s %10.3f  %10s\n", "hajek",     res_obs$hajek,     "—"))
+cat(sprintf("%-14s %10.3f  %10s\n", "msm",       res_obs$msm,       "—"))
+cat(sprintf("%-14s %10.3f  %10s\n", "dr",        res_obs$dr,        "—"))
+cat("\nNota: naive y regresion tienen referencia directa del slide 9.\n")
+```
+
+---
+
+# Slides 66–74: Propensity Score e IPW — datos `Matching`
+
+> A partir de aquí el slide vuelve a `data(lalonde, package = "Matching")`  
+> (el slide 117 usa `lalonde_trim$treat`, confirmando que es el dataset de Matching)
+
+```{r datos_ps}
+# Volver al dataset de Matching
+data(lalonde, package = "Matching")
+head(lalonde)
+```
+
+## Slide 66: Balance antes del PS (referencia)
+
+```{r balance_pre_ps}
+# Slide 66 usa estas covariables (igual que slide 8 pero con nombres de Matching)
+covs_ps_bal <- c("age", "education", "black", "hispanic",
+                 "married", "nodegree", "re74", "re75", "u74", "u75")
+
+# Matching no tiene estas columnas — crearlas como hizo el slide 7
+lalonde$u74 <- as.numeric(lalonde$re74 == 0)
+lalonde$u75 <- as.numeric(lalonde$re75 == 0)
+
+# Slide 66 también necesita education y nodegree — en Matching se llaman educ y nodegr
+lalonde$education <- lalonde$educ
+lalonde$nodegree  <- lalonde$nodegr
+lalonde$hispanic  <- lalonde$hisp
+
+tabla_pre <- visualizar_balance(lalonde, "treat", covs_ps_bal,
+                                mostrar_graficos = FALSE)
+print(tabla_pre)
+cat("\nReferencia slide 66: muestra NO balanceada (mismos resultados que slide 8).\n")
+```
+
+## Slide 67: Estimaciones ya conocidas (resumen)
+
+```{r estimaciones_conocidas}
+cat("Estimacion 1 (RCT naive):        ATE =  1794.34  IC: [994.66;  2594.02]\n")
+cat("Estimacion 2 (obs naive):        ATE =  -635.03  IC: [-1967.24; 697.19]\n")
+cat("Estimacion 3 (reg treat+age):    ATE =  -462.06  IC: [-1751.11; 193.66]\n")
+cat("Estimacion 4 (reg todas covs):   ATE =   865.59  IC: [68.23;   3124.64]\n")
+```
+
+## Slide 68: Estimación del Propensity Score
+
+```{r ps_manual}
+# Manual (slide 68): modelo exacto con polinomios cubicos en education
+PS_glm <- glm(treat ~ age + education + I(education^2) + I(education^3) +
+                factor(nodegree) + factor(black) + factor(hispanic) +
+                re74 + re75,
+              data = lalonde, family = "binomial")
+summary(PS_glm)$coefficients
+cat("\nReferencia slide 68: factor(black)1 = 3.167  factor(hispanic)1 = 1.029\n")
+
+PS  <- as.numeric(predict(PS_glm, type = "response"))
+IPW <- as.numeric(lalonde$treat / PS + (1 - lalonde$treat) / (1 - PS))
+```
+
+```{r ps_causality}
+# causality::propensity_score() con el mismo modelo
+covs_ps <- c("age", "education", "I(education^2)", "I(education^3)",
+             "nodegree", "black", "hispanic", "re74", "re75")
+
+df_ps <- propensity_score(lalonde,
+                          tratamiento = "treat",
+                          covariables = covs_ps)
+
+cat("\nPS manual vs causality:\n")
+cat(sprintf("  PS manual  — min=%.4f  media=%.4f  max=%.4f\n",
+            min(PS), mean(PS), max(PS)))
+cat(sprintf("  PS causality — min=%.4f  media=%.4f  max=%.4f\n",
+            min(df_ps$propensity_score, na.rm = TRUE),
+            mean(df_ps$propensity_score, na.rm = TRUE),
+            max(df_ps$propensity_score, na.rm = TRUE)))
+```
+
+## Slide 69: Histograma PS por grupo
+
+```{r hist_ps}
+# Manual (slide 69)
+df_plot <- data.frame(PS  = PS,
+                      treat = factor(lalonde$treat,
+                                     labels = c("Control", "Treated")))
+ggplot(df_plot, aes(x = PS, fill = treat, color = treat)) +
+  geom_histogram(aes(y = after_stat(density)),
+                 alpha = 0.5, position = "identity", bins = 30) +
+  labs(title = "PS Histograms by Treatment Group  (Slide 69)",
+       x = "PS", y = "Density") +
+  scale_fill_manual(values  = c("Control" = "salmon", "Treated" = "turquoise3")) +
+  scale_color_manual(values = c("Control" = "salmon", "Treated" = "turquoise3")) +
+  theme_bw()
+```
+
+## Slide 70: Histograma IPW por grupo
+
+```{r hist_ipw}
+# Manual (slide 70)
+df_ipw <- data.frame(IPW   = IPW,
+                     treat = factor(lalonde$treat,
+                                    labels = c("Control", "Treated")))
+ggplot(df_ipw, aes(x = IPW, fill = treat, color = treat)) +
+  geom_histogram(aes(y = after_stat(density)),
+                 alpha = 0.5, position = "identity", bins = 40) +
+  labs(title = "IPW Histograms by Treatment Group  (Slide 70)",
+       x = "IPW", y = "Density") +
+  scale_fill_manual(values  = c("Control" = "salmon", "Treated" = "turquoise3")) +
+  scale_color_manual(values = c("Control" = "salmon", "Treated" = "turquoise3")) +
+  theme_bw()
+```
+
+## Slide 71: Estimación 5 — Horvitz-Thompson
+
+```{r ht_manual}
+# Manual (slide 71)
+ate_ht_manual <- with(lalonde,
+                      mean(treat * re78 * IPW) - mean((1 - treat) * re78 * IPW))
+cat(sprintf("Manual:     [1] %.4f\n", ate_ht_manual))
+cat("Referencia: [1] -337.5471\n")
+```
+
+```{r ht_causality}
+# causality
+res_ps <- calcular_ate(df_ps,
+                       resultado   = "re78",
+                       tratamiento = "treat",
+                       covariables = covs_ps)
+cat(sprintf("causality ht: %.4f\n", res_ps$ht))
+cat("Referencia:   -337.5471\n")
+```
+
+## Slide 71: Estimación 6 — Hajek
+
+```{r hajek_manual}
+# Manual (slide 71)
+ate_hj_manual <- with(lalonde,
+                      (sum(treat * re78 * IPW) / sum(treat * IPW)) -
+                      (sum((1 - treat) * re78 * IPW) / sum((1 - treat) * IPW)))
+cat(sprintf("Manual:     [1] %.4f\n", ate_hj_manual))
+cat("Referencia: [1] 481.6272\n")
+```
+
+```{r hajek_causality}
+cat(sprintf("causality hajek: %.4f\n", res_ps$hajek))
+cat("Referencia:      481.6272\n")
+```
+
+## Slide 72: Estimación 6 — Trimming (HT y Hajek)
+
+```{r trimming_manual}
+# Manual (slide 72)
+Q            <- 0.05
+lalonde_trim <- lalonde[PS > Q & PS < (1 - Q), ]
+PS_trim      <- PS[PS > Q & PS < (1 - Q)]
+IPW_trim     <- as.numeric(lalonde_trim$treat / PS_trim +
+                            (1 - lalonde_trim$treat) / (1 - PS_trim))
+
+ate_ht_trim_manual <- with(lalonde_trim,
+                           mean(treat * re78 * IPW_trim) -
+                           mean((1 - treat) * re78 * IPW_trim))
+cat(sprintf("Manual HT (trim):     [1] %.3f\n", ate_ht_trim_manual))
+cat("Referencia:               2280.127\n\n")
+
+ate_hj_trim_manual <- with(lalonde_trim,
+                           (sum(treat * re78 * IPW_trim) / sum(treat * IPW_trim)) -
+                           (sum((1 - treat) * re78 * IPW_trim) /
+                            sum((1 - treat) * IPW_trim)))
+cat(sprintf("Manual Hajek (trim):  [1] %.3f\n", ate_hj_trim_manual))
+cat("Referencia:               1880.384\n")
+```
+
+```{r trimming_causality}
+# causality
+df_trim  <- balance(df_ps, "treat", metodo = "trimming", kappa = 0.05)
+res_trim <- calcular_ate(df_trim,
+                         resultado   = "re78",
+                         tratamiento = "treat",
+                         covariables = covs_ps)
+
+cat(sprintf("\ncausality HT   (trim): %.3f\n", res_trim$ht))
+cat("Referencia:            2280.127\n\n")
+cat(sprintf("causality Hajek (trim): %.3f\n", res_trim$hajek))
+cat("Referencia:             1880.384\n")
+```
+
+## Slide 73: Histograma PS trimmed
+
+```{r hist_ps_trim}
+df_plot_trim <- data.frame(
+  PS    = PS_trim,
+  treat = factor(lalonde_trim$treat, labels = c("Control", "Treated"))
+)
+ggplot(df_plot_trim, aes(x = PS, fill = treat, color = treat)) +
+  geom_histogram(aes(y = after_stat(density)),
+                 alpha = 0.5, position = "identity", bins = 30) +
+  labs(title = "Trimmed PS Histograms by Treatment Group  (Slide 73)",
+       x = "PS", y = "Density") +
+  scale_fill_manual(values  = c("Control" = "salmon", "Treated" = "turquoise3")) +
+  scale_color_manual(values = c("Control" = "salmon", "Treated" = "turquoise3")) +
+  theme_bw()
+```
+
+## Slide 74: Histograma IPW trimmed
+
+```{r hist_ipw_trim}
+df_ipw_trim <- data.frame(
+  IPW   = IPW_trim,
+  treat = factor(lalonde_trim$treat, labels = c("Control", "Treated"))
+)
+ggplot(df_ipw_trim, aes(x = IPW, fill = treat, color = treat)) +
+  geom_histogram(aes(y = after_stat(density)),
+                 alpha = 0.5, position = "identity", bins = 40) +
+  labs(title = "Trimmed IPW Histograms by Treatment Group  (Slide 74)",
+       x = "IPW", y = "Density") +
+  scale_fill_manual(values  = c("Control" = "salmon", "Treated" = "turquoise3")) +
+  scale_color_manual(values = c("Control" = "salmon", "Treated" = "turquoise3")) +
+  theme_bw()
+```
+
+---
+
+# Resumen general: Manual vs `causality`
+
+```{r resumen}
+cat("=============================================================\n")
+cat(sprintf("%-28s  %10s  %10s  %10s\n",
+            "Estimacion", "Manual", "causality", "Referencia"))
+cat("=============================================================\n")
+
+resultados <- list(
+  # RCT
+  list("Naive (RCT)",
+       ate_manual,            res_rand$naive,     1794.343),
+  list("Regresion (RCT)",
+       coef(lalonde_fit)["treat"], res_rand$regresion, 1670.709),
+  # Observacional
+  list("Naive (obs)",
+       ate_naive_obs,         res_obs$naive,      -635.026),
+  list("Regresion (obs)",
+       coef(lalonde_fit_obs)["treatment"], res_obs$regresion, 865.586),
+  # PS sin trimming
+  list("HT (sin trim)",
+       ate_ht_manual,         res_ps$ht,          -337.547),
+  list("Hajek (sin trim)",
+       ate_hj_manual,         res_ps$hajek,        481.627),
+  # PS con trimming
+  list("HT (trim k=0.05)",
+       ate_ht_trim_manual,    res_trim$ht,        2280.127),
+  list("Hajek (trim k=0.05)",
+       ate_hj_trim_manual,    res_trim$hajek,     1880.384)
+)
+
+for (r in resultados) {
+  diff_man <- abs(r[[2]] - r[[4]])
+  diff_pkg <- abs(r[[3]] - r[[4]])
+  flag <- if (diff_pkg > 50) " <-- revisar" else " OK"
+  cat(sprintf("%-28s  %10.2f  %10.2f  %10.2f%s\n",
+              r[[1]], r[[2]], r[[3]], r[[4]], flag))
+}
+cat("=============================================================\n")
+```
