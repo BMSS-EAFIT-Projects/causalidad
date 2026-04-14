@@ -1,0 +1,22 @@
+Package: causality
+Title: Inferencia Causal
+Version: 0.1.0
+Authors@R: 
+    person("Andres", "Puerta", email = "afpuertav@eafit.edu.co", role = c("aut", "cre"))
+Description: Paquete de inferencia causal. Implementa estimación del propensity 
+    score, métodos de balanceo (matching, subclasificación, trimming, truncating) 
+    y estimadores del ATE (naïve, regresión, g-fórmula, Horvitz-Thompson, Hajek,
+    MSM, doblemente robusto).
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.1
+Imports:
+    stats,
+    ggplot2,
+    dplyr,
+    tidyr
+Suggests:
+    testthat (>= 3.0.0),
+    MatchIt
+Config/testthat/edition: 3

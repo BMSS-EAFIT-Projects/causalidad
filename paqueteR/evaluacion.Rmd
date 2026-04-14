@@ -1,0 +1,448 @@
+---
+title: "Evaluación del Paquete `causality`"
+output:
+  html_notebook:
+    toc: true
+    toc_float: true
+    theme: flatly
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = TRUE, warning = FALSE)
+```
+
+```{r librerias}
+library(causality)
+library(MASS)   # mvrnorm — equivalente a multivariate_normal.rvs de Python
+```
+
+---
+
+# Escenario 1: Experimento aleatorio
+
+```{r seed_1}
+SEED <- 1234
+TAU  <- 1.5
+```
+
+## Simulación de datos
+
+```{r datos_1}
+set.seed(SEED)
+
+n <- 2000
+p <- 0.75
+
+# Covariables correlacionadas (slide 18)
+mu    <- c(2, -3)
+sigma <- matrix(c(1.23, -0.2, -0.2, 0.93), nrow = 2)
+X     <- MASS::mvrnorm(n, mu = mu, Sigma = sigma)
+
+# Tratamiento aleatorio — independiente de X
+A <- rbinom(n, 1, p)
+
+# Outcome
+eps <- rnorm(n, 0, 0.2)
+Y   <- 0.25 + TAU * A + 0.3 * X[, 1] + 0.15 * X[, 2] + eps
+
+df <- data.frame(A = A, X1 = X[, 1], X2 = X[, 2], Y = Y)
+
+tratamiento <- "A"
+resultado   <- "Y"
+covariables <- c("X1", "X2")
+
+head(df, 5)
+```
+
+```{r diagnostico_1}
+cat(sprintf("n = %d\n", n))
+cat(sprintf("P(A=1) = %.3f  (esperado: %.2f)\n\n", mean(A), p))
+cat(sprintf("Media Y tratados:  %.4f\n", mean(Y[A == 1])))
+cat(sprintf("Media Y controles: %.4f\n", mean(Y[A == 0])))
+cat(sprintf("Diferencia naive:  %.4f\n", mean(Y[A == 1]) - mean(Y[A == 0])))
+```
+
+```{r balance_pre_1}
+cat("Balance de covariables (antes de balancear):\n")
+cat(sprintf("  Media X1 tratados:  %.4f\n", mean(df$X1[df$A == 1])))
+cat(sprintf("  Media X1 controles: %.4f\n", mean(df$X1[df$A == 0])))
+cat(sprintf("  Media X2 tratados:  %.4f\n", mean(df$X2[df$A == 1])))
+cat(sprintf("  Media X2 controles: %.4f\n", mean(df$X2[df$A == 0])))
+cat("\nDebe estar balanceada por construcción — las diferencias deben ser pequeñas\n")
+cat("aunque P(A=1) = 0.75 (grupos de distinto tamaño).\n")
+```
+
+```{r ps_1}
+df <- propensity_score(df, tratamiento, covariables)
+head(df[, c("A", "X1", "X2", "Y", "propensity_score")], 10)
+```
+
+```{r ps_diagnostico_1}
+cat(sprintf("PS estimado — media: %.4f  std: %.4f\n",
+            mean(df$propensity_score), sd(df$propensity_score)))
+cat(sprintf("PS verdadero = %.2f para todas las unidades\n", p))
+```
+
+## ATE — Sin balancear
+
+```{r ate_orig_1}
+res_orig <- calcular_ate(df, resultado, tratamiento, covariables)
+
+cat(sprintf("tau verdadero = %.1f\n", TAU))
+cat(sprintf("%-14s %8s  %8s\n", "Estimador", "ATE", "Error"))
+cat(paste(rep("-", 36), collapse = ""), "\n")
+for (key in c("naive", "regresion", "g_formula", "ht", "hajek", "msm", "dr")) {
+  val <- res_orig[[key]]; err <- val - TAU
+  cat(sprintf("%-14s %8.3f  %+8.3f\n", key, val, err))
+}
+cat("\nTodos deberían dar ≈ 1.5 porque A ⊥⊥ X.\n")
+```
+
+## ATE — Balanceado
+
+### Trimming
+
+```{r trimming_1}
+df_trim <- balance(df, tratamiento, metodo = "trimming", kappa = 0.05)
+
+cat(sprintf("Filas antes:                %d\n", nrow(df)))
+cat(sprintf("Filas después del trimming: %d\n", nrow(df_trim)))
+cat(sprintf("Eliminadas:                 %d\n", nrow(df) - nrow(df_trim)))
+cat(sprintf("\nPS en df_trim — min: %.4f  max: %.4f\n",
+            min(df_trim$propensity_score), max(df_trim$propensity_score)))
+cat("\nCon un RCT el trimming no debería eliminar a nadie porque el PS\n")
+cat("no tiene valores extremos.\n")
+```
+
+```{r ate_trim_1}
+res_trim <- calcular_ate(df_trim, resultado, tratamiento, covariables)
+
+cat(sprintf("tau verdadero = %.1f\n", TAU))
+cat(sprintf("%-14s %8s  %8s\n", "Estimador", "ATE", "Error"))
+cat(paste(rep("-", 36), collapse = ""), "\n")
+for (key in c("naive", "regresion", "g_formula", "ht", "hajek", "msm", "dr")) {
+  val <- res_trim[[key]]; err <- val - TAU
+  cat(sprintf("%-14s %8.3f  %+8.3f\n", key, val, err))
+}
+```
+
+### Truncating
+
+```{r truncating_1}
+df_trunc <- balance(df, tratamiento, metodo = "truncating", kappa = 0.05)
+
+cat(sprintf("Filas: %d  (sin eliminar)\n", nrow(df_trunc)))
+cat(sprintf("PS original — min: %.4f  max: %.4f\n",
+            min(df_trunc$propensity_score_original),
+            max(df_trunc$propensity_score_original)))
+cat(sprintf("PS truncado — min: %.4f  max: %.4f\n",
+            min(df_trunc$propensity_score),
+            max(df_trunc$propensity_score)))
+```
+
+```{r ate_trunc_1}
+res_trunc <- calcular_ate(df_trunc, resultado, tratamiento, covariables)
+
+cat(sprintf("tau verdadero = %.1f\n", TAU))
+cat(sprintf("%-14s %8s  %8s\n", "Estimador", "ATE", "Error"))
+cat(paste(rep("-", 36), collapse = ""), "\n")
+for (key in c("naive", "regresion", "g_formula", "ht", "hajek", "msm", "dr")) {
+  val <- res_trunc[[key]]; err <- val - TAU
+  cat(sprintf("%-14s %8.3f  %+8.3f\n", key, val, err))
+}
+```
+
+### Matching
+
+```{r matching_1}
+df_match <- balance(df, tratamiento, metodo = "matching")
+
+cat(sprintf("Filas antes:                %d\n", nrow(df)))
+cat(sprintf("Filas después del matching: %d\n", nrow(df_match)))
+cat(sprintf("Pares formados:             %d\n", nrow(df_match) %/% 2))
+cat(sprintf("n tratados:  %d\n", sum(df_match[[tratamiento]] == 1)))
+cat(sprintf("n controles: %d\n", sum(df_match[[tratamiento]] == 0)))
+```
+
+```{r ate_match_1}
+res_match <- calcular_ate(df_match, resultado, tratamiento, covariables)
+
+cat(sprintf("tau verdadero = %.1f\n", TAU))
+cat(sprintf("%-14s %8s  %8s\n", "Estimador", "ATE", "Error"))
+cat(paste(rep("-", 36), collapse = ""), "\n")
+for (key in c("naive", "regresion", "g_formula", "ht", "hajek", "msm", "dr")) {
+  val <- res_match[[key]]; err <- val - TAU
+  cat(sprintf("%-14s %8.3f  %+8.3f\n", key, val, err))
+}
+```
+
+### Subclasificación
+
+```{r subclassif_1}
+df_sub <- balance(df, tratamiento, metodo = "subclassif", n_subclases = 5)
+
+cat("Distribución por subclase:\n")
+for (sc in sort(unique(df_sub$subclase[!is.na(df_sub$subclase)]))) {
+  sub <- df_sub[!is.na(df_sub$subclase) & df_sub$subclase == sc, ]
+  nt  <- sum(sub[[tratamiento]] == 1)
+  nc  <- sum(sub[[tratamiento]] == 0)
+  cat(sprintf("  Subclase %d: n=%4d  T=%4d  C=%4d  PS_medio=%.3f\n",
+              sc, nrow(sub), nt, nc, mean(sub$propensity_score)))
+}
+```
+
+```{r ate_sub_1}
+res_sub <- calcular_ate(df_sub, resultado, tratamiento, covariables)
+
+cat(sprintf("tau verdadero = %.1f\n", TAU))
+cat(sprintf("%-14s %8s  %8s\n", "Estimador", "ATE", "Error"))
+cat(paste(rep("-", 36), collapse = ""), "\n")
+for (key in c("naive", "regresion", "g_formula", "ht", "hajek", "msm", "dr")) {
+  val <- res_sub[[key]]; err <- val - TAU
+  cat(sprintf("%-14s %8.3f  %+8.3f\n", key, val, err))
+}
+```
+
+---
+
+# Escenario 2: Tratamiento afectado por covariables
+
+```{r seed_2}
+SEED <- 1234
+TAU  <- 1.0
+```
+
+## Simulación de datos
+
+```{r datos_2}
+set.seed(SEED)
+
+n <- 2000
+
+# Covariables correlacionadas (slide 37)
+mu    <- c(1, 2)
+sigma <- matrix(c(0.750, -0.375, -0.375, 1.0), nrow = 2)
+X     <- MASS::mvrnorm(n, mu = mu, Sigma = sigma)
+
+# Mecanismo de asignación — depende de X
+eta  <- 0.8 * X[, 1] - 0.5 * X[, 2]
+ps_v <- 1 / (1 + exp(-eta))   # PS verdadero
+A    <- rbinom(n, 1, ps_v)
+
+# Outcome — X1 y X2 son confusores
+eps <- rnorm(n, 0, 0.75)
+Y   <- 0.75 + TAU * A + 1.4 * X[, 1] + 5.0 * X[, 2] + eps
+
+df <- data.frame(A = A, X1 = X[, 1], X2 = X[, 2], Y = Y, ps_verd = ps_v)
+
+tratamiento <- "A"
+resultado   <- "Y"
+covariables <- c("X1", "X2")
+
+head(df, 5)
+```
+
+```{r diagnostico_2}
+cat(sprintf("n = %d\n", n))
+cat(sprintf("P(A=1) = %.3f  (ya no es fijo — depende de X)\n\n", mean(A)))
+
+cat("Desbalance de covariables:\n")
+cat(sprintf("  Media X1 tratados:  %.4f\n", mean(df$X1[df$A == 1])))
+cat(sprintf("  Media X1 controles: %.4f  <- diferencia: %+.4f\n",
+            mean(df$X1[df$A == 0]),
+            mean(df$X1[df$A == 1]) - mean(df$X1[df$A == 0])))
+cat(sprintf("  Media X2 tratados:  %.4f\n", mean(df$X2[df$A == 1])))
+cat(sprintf("  Media X2 controles: %.4f  <- diferencia: %+.4f\n",
+            mean(df$X2[df$A == 0]),
+            mean(df$X2[df$A == 1]) - mean(df$X2[df$A == 0])))
+cat("\nA diferencia de antes, aquí los grupos son distintos en X.\n")
+cat("Esa diferencia se va a traducir en sesgo si no la controlamos.\n")
+```
+
+```{r ps_verdadero_2}
+cat("PS verdadero (conocido porque simulamos nosotros):\n")
+cat(sprintf("  min=%.4f  p25=%.4f  media=%.4f  p75=%.4f  max=%.4f\n",
+            min(ps_v), quantile(ps_v, 0.25), mean(ps_v),
+            quantile(ps_v, 0.75), max(ps_v)))
+cat("\nPS verdadero por grupo:\n")
+cat(sprintf("  Tratados  (A=1): media=%.4f  <- PS más alto\n", mean(ps_v[A == 1])))
+cat(sprintf("  Controles (A=0): media=%.4f  <- PS más bajo\n", mean(ps_v[A == 0])))
+
+naive_bruto <- mean(Y[A == 1]) - mean(Y[A == 0])
+cat(sprintf("\nDiferencia naive = %.4f\n", naive_bruto))
+cat(sprintf("tau verdadero    = %.4f\n", TAU))
+cat(sprintf("Sesgo naive      = %+.4f\n", naive_bruto - TAU))
+cat("\nEl naive estima mal porque los tratados también tienen X1 y X2 más\n")
+cat("altos, y X1 y X2 suben Y directamente (coefs 1.4 y 5.0).\n")
+```
+
+```{r ps_2}
+df <- propensity_score(df, tratamiento, covariables)
+
+cat("\nPS estimado:\n")
+cat(sprintf("  min=%.4f  p25=%.4f  media=%.4f  p75=%.4f  max=%.4f\n",
+            min(df$propensity_score), quantile(df$propensity_score, 0.25),
+            mean(df$propensity_score), quantile(df$propensity_score, 0.75),
+            max(df$propensity_score)))
+cat("\nPS verdadero:\n")
+cat(sprintf("  min=%.4f  p25=%.4f  media=%.4f  p75=%.4f  max=%.4f\n",
+            min(ps_v), quantile(ps_v, 0.25), mean(ps_v),
+            quantile(ps_v, 0.75), max(ps_v)))
+
+corr <- cor(df$propensity_score, df$ps_verd)
+cat(sprintf("\nCorrelación PS estimado vs PS verdadero: %.4f\n", corr))
+cat("Una correlación alta (>0.99) indica que el modelo logístico\n")
+cat("capturó bien el mecanismo de asignación.\n")
+```
+
+## ATE — Sin balancear
+
+```{r ate_orig_2}
+res_orig <- calcular_ate(df, resultado, tratamiento, covariables)
+
+cat(sprintf("tau verdadero = %.1f\n", TAU))
+cat(sprintf("%-14s %8s  %8s\n", "Estimador", "ATE", "Error"))
+cat(paste(rep("-", 36), collapse = ""), "\n")
+for (key in c("naive", "regresion", "g_formula", "ht", "hajek", "msm", "dr")) {
+  val  <- res_orig[[key]]; err <- val - TAU
+  flag <- if (abs(err) > 0.15) "  <- SESGO" else ""
+  cat(sprintf("%-14s %8.3f  %+8.3f%s\n", key, val, err, flag))
+}
+cat("\nEl naive debería estar sesgado.\n")
+cat("Regresión, g-fórmula y DR deberían estar cerca de 1.0 porque\n")
+cat("controlan X1 y X2 explícitamente.\n")
+cat("HT y Hajek dependen del PS estimado — si el PS es bueno, convergen.\n")
+```
+
+## ATE — Balanceado
+
+### Trimming
+
+```{r trimming_2}
+df_trim <- balance(df, tratamiento, metodo = "trimming", kappa = 0.05)
+
+cat(sprintf("Filas antes:  %d\n", nrow(df)))
+cat(sprintf("Filas después: %d\n", nrow(df_trim)))
+cat(sprintf("Eliminadas:   %d\n", nrow(df) - nrow(df_trim)))
+cat("\nA diferencia del RCT, aquí sí hay PS extremos porque A depende de X.\n")
+cat("El trimming elimina las unidades sin contrafactual comparable.\n")
+
+cat("\nDesbalance de covariables DESPUÉS del trimming:\n")
+cat(sprintf("  Media X1 tratados:  %.4f\n", mean(df_trim$X1[df_trim$A == 1])))
+cat(sprintf("  Media X1 controles: %.4f  <- diferencia: %+.4f\n",
+            mean(df_trim$X1[df_trim$A == 0]),
+            mean(df_trim$X1[df_trim$A == 1]) - mean(df_trim$X1[df_trim$A == 0])))
+cat(sprintf("  Media X2 tratados:  %.4f\n", mean(df_trim$X2[df_trim$A == 1])))
+cat(sprintf("  Media X2 controles: %.4f  <- diferencia: %+.4f\n",
+            mean(df_trim$X2[df_trim$A == 0]),
+            mean(df_trim$X2[df_trim$A == 1]) - mean(df_trim$X2[df_trim$A == 0])))
+```
+
+```{r ate_trim_2}
+res_trim <- calcular_ate(df_trim, resultado, tratamiento, covariables)
+
+cat(sprintf("tau verdadero = %.1f\n", TAU))
+cat(sprintf("%-14s %8s  %8s\n", "Estimador", "ATE", "Error"))
+cat(paste(rep("-", 36), collapse = ""), "\n")
+for (key in c("naive", "regresion", "g_formula", "ht", "hajek", "msm", "dr")) {
+  val  <- res_trim[[key]]; err <- val - TAU
+  flag <- if (abs(err) > 0.15) "  <- SESGO" else ""
+  cat(sprintf("%-14s %8.3f  %+8.3f%s\n", key, val, err, flag))
+}
+```
+
+### Truncating
+
+```{r truncating_2}
+df_trunc <- balance(df, tratamiento, metodo = "truncating", kappa = 0.05)
+
+n_truncados <- sum(df$propensity_score < 0.05 | df$propensity_score > 0.95)
+cat(sprintf("Filas: %d  (sin eliminar)\n", nrow(df_trunc)))
+cat(sprintf("PS truncados: %d\n", n_truncados))
+cat(sprintf("PS original — min: %.4f  max: %.4f\n",
+            min(df_trunc$propensity_score_original),
+            max(df_trunc$propensity_score_original)))
+cat(sprintf("PS truncado — min: %.4f  max: %.4f\n",
+            min(df_trunc$propensity_score),
+            max(df_trunc$propensity_score)))
+```
+
+```{r ate_trunc_2}
+res_trunc <- calcular_ate(df_trunc, resultado, tratamiento, covariables)
+
+cat(sprintf("tau verdadero = %.1f\n", TAU))
+cat(sprintf("%-14s %8s  %8s\n", "Estimador", "ATE", "Error"))
+cat(paste(rep("-", 36), collapse = ""), "\n")
+for (key in c("naive", "regresion", "g_formula", "ht", "hajek", "msm", "dr")) {
+  val  <- res_trunc[[key]]; err <- val - TAU
+  flag <- if (abs(err) > 0.15) "  <- SESGO" else ""
+  cat(sprintf("%-14s %8.3f  %+8.3f%s\n", key, val, err, flag))
+}
+```
+
+### Matching
+
+```{r matching_2}
+df_match <- balance(df, tratamiento, metodo = "matching")
+
+cat(sprintf("Filas antes:  %d\n", nrow(df)))
+cat(sprintf("Filas después: %d\n", nrow(df_match)))
+cat(sprintf("Pares formados: %d\n", nrow(df_match) %/% 2))
+
+cat("\nDesbalance de covariables DESPUÉS del matching:\n")
+cat(sprintf("  Media X1 tratados:  %.4f\n", mean(df_match$X1[df_match$A == 1])))
+cat(sprintf("  Media X1 controles: %.4f  <- diferencia: %+.4f\n",
+            mean(df_match$X1[df_match$A == 0]),
+            mean(df_match$X1[df_match$A == 1]) - mean(df_match$X1[df_match$A == 0])))
+cat(sprintf("  Media X2 tratados:  %.4f\n", mean(df_match$X2[df_match$A == 1])))
+cat(sprintf("  Media X2 controles: %.4f  <- diferencia: %+.4f\n",
+            mean(df_match$X2[df_match$A == 0]),
+            mean(df_match$X2[df_match$A == 1]) - mean(df_match$X2[df_match$A == 0])))
+cat("El matching debería reducir el desbalance en X acercando los controles\n")
+cat("a los tratados en términos de PS.\n")
+```
+
+```{r ate_match_2}
+res_match <- calcular_ate(df_match, resultado, tratamiento, covariables)
+
+cat(sprintf("tau verdadero = %.1f\n", TAU))
+cat(sprintf("%-14s %8s  %8s\n", "Estimador", "ATE", "Error"))
+cat(paste(rep("-", 36), collapse = ""), "\n")
+for (key in c("naive", "regresion", "g_formula", "ht", "hajek", "msm", "dr")) {
+  val  <- res_match[[key]]; err <- val - TAU
+  flag <- if (abs(err) > 0.15) "  <- SESGO" else ""
+  cat(sprintf("%-14s %8.3f  %+8.3f%s\n", key, val, err, flag))
+}
+```
+
+### Subclasificación
+
+```{r subclassif_2}
+df_sub <- balance(df, tratamiento, metodo = "subclassif", n_subclases = 5)
+
+cat("Distribución por subclase:\n")
+for (sc in sort(unique(df_sub$subclase[!is.na(df_sub$subclase)]))) {
+  sub <- df_sub[!is.na(df_sub$subclase) & df_sub$subclase == sc, ]
+  nt  <- sum(sub[[tratamiento]] == 1)
+  nc  <- sum(sub[[tratamiento]] == 0)
+  cat(sprintf("  Subclase %d: n=%4d  T=%4d  C=%4d  PS_medio=%.3f\n",
+              sc, nrow(sub), nt, nc, mean(sub$propensity_score)))
+}
+cat("\nA diferencia del RCT donde las subclases tenían ~50/50 tratados/controles,\n")
+cat("aquí la subclase 1 (PS bajo) tiene pocos tratados y la subclase 5\n")
+cat("(PS alto) tiene pocos controles — el desbalance original es visible.\n")
+```
+
+```{r ate_sub_2}
+res_sub <- calcular_ate(df_sub, resultado, tratamiento, covariables)
+
+cat(sprintf("tau verdadero = %.1f\n", TAU))
+cat(sprintf("%-14s %8s  %8s\n", "Estimador", "ATE", "Error"))
+cat(paste(rep("-", 36), collapse = ""), "\n")
+for (key in c("naive", "regresion", "g_formula", "ht", "hajek", "msm", "dr")) {
+  val  <- res_sub[[key]]; err <- val - TAU
+  flag <- if (abs(err) > 0.15) "  <- SESGO" else ""
+  cat(sprintf("%-14s %8.3f  %+8.3f%s\n", key, val, err, flag))
+}
+```
